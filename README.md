@@ -22,27 +22,24 @@ This app was built as a take-home assignment. Condensed brief:
 
 The build happened as a running conversation, not one shot. Roughly in order:
 
-1. Bare scaffold first, just "Create a Next.js web app", before the spec above.
-2. The spec above, then "refer to Splitwise too" as a nudge on UX polish.
-3. Rework into **multi-group**: named groups instead of one flat session,
+1. The spec above, then "refer to Splitwise too" as a nudge on UX polish.
+2. Rework into **multi-group**: named groups instead of one flat session,
    bento-box white-and-amber redesign, "+" buttons for group/member/expense
    instead of tabs, a top-of-screen debt summary, a Members panel.
-4. Apple HIG-flavored pass: bigger type, the whole app as one centered
+3. Apple HIG-flavored pass: bigger type, the whole app as one centered
    rounded panel, plus a real **Settle Up** action (recording actual
    payments, full or partial, not just a suggested list) and an activity
    log color-coded by entry type.
-5. Delete-group button, but only once a group is fully settled up.
-6. Minimalist "Apple + Nike" pass: cut the palette down hard, keep the
+4. Delete-group button, but only once a group is fully settled up.
+5. Minimalist "Apple + Nike" pass: cut the palette down hard, keep the
    existing amber theme rather than introducing a new one.
-7. Partial reversal: distinct hashed colors back on avatars, and light
-   shaded backgrounds on the bento cards.
-8. Add-expense tooltip explaining the penny-drop rule, plus drag-to-reorder
+6. Partial reversal: distinct hashed colors back on avatars, and light
+  shaded backgrounds on the bento cards.
+7. Add-expense tooltip explaining the penny-drop rule, plus drag-to-reorder
    participants so the user controls who gets the leftover cent(s).
-9. Expense date picker (back-datable); settlement dates stay auto-set to
+8. Expense date picker (back-datable); settlement dates stay auto-set to
    "now" and aren't user-editable.
-10. Members panel rows re-colored to green/red by owed/owes status.
-11. This README: a Features section, an Example Workflow section, and this
-    prompt history.
+9. Members panel rows re-colored to green/red by owed/owes status.
 
 ## Features
 
