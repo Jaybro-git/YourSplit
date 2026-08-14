@@ -50,8 +50,11 @@ export function SettleUpModal({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Amount (LKR)</label>
+          <label htmlFor="settle-amount" className="mb-1 block text-sm font-semibold text-text">
+            Amount (LKR)
+          </label>
           <input
+            id="settle-amount"
             type="number"
             min="0.01"
             max={fullAmount / 100}
@@ -59,7 +62,7 @@ export function SettleUpModal({
             autoFocus
             value={amountRs}
             onChange={(e) => setAmountRs(e.target.value)}
-            className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-lg font-semibold outline-none focus:border-accent"
+            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-lg font-semibold outline-none focus:border-accent"
           />
           <div className="mt-2 flex items-center justify-between text-xs text-text-muted">
             <span>Full amount owed: {formatCurrency(fullAmount)}</span>
@@ -76,7 +79,7 @@ export function SettleUpModal({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="rounded-xl bg-owed-to-you px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-2xl bg-owed-to-you px-4 py-3 text-base font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Record payment of {amountCents > 0 ? formatCurrency(amountCents) : "..."}
         </button>

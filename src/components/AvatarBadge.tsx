@@ -31,7 +31,7 @@ export function AvatarBadge({
 
   return (
     <span
-      className={`inline-flex ${dimensions} flex-shrink-0 items-center justify-center rounded-full font-display font-semibold text-white ${colorForId(
+      className={`inline-flex ${dimensions} flex-shrink-0 items-center justify-center rounded-full font-semibold text-white ${colorForId(
         id
       )}`}
     >

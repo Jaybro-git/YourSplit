@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  --bg-outer: #e7e0d0;
   --bg: #fbf7ef;
   --surface: #ffffff;
   --surface-muted: #fff6e6;
@@ -12,9 +13,13 @@
   --accent-soft: #fde9c8;
   --owed-to-you: #15803d;
   --you-owe: #be123c;
+  --font-system:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
 }
 
 @theme inline {
+  --color-bg-outer: var(--bg-outer);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
@@ -26,19 +31,23 @@
   --color-accent-soft: var(--accent-soft);
   --color-owed-to-you: var(--owed-to-you);
   --color-you-owe: var(--you-owe);
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
+  --font-sans: var(--font-system);
+}
+
+html {
+  font-size: 17px;
 }
 
 body {
-  background: var(--bg);
+  background: var(--bg-outer);
   color: var(--text);
-  font-family: var(--font-body), sans-serif;
+  font-family: var(--font-system);
+  letter-spacing: -0.011em;
 }
 
 h1,
 h2,
-h3,
-.font-display {
-  font-family: var(--font-display), serif;
+h3 {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }

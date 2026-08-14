@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Expense, Group } from "@/types";
+import type { Expense, Group, Transaction } from "@/types";
 import { computeBalances } from "@/lib/balances";
 import { simplifyDebts } from "@/lib/settleUp";
 import { SettleUpStrip } from "./SettleUpStrip";
-import { ExpenseList } from "./ExpenseList";
+import { ActivityFeed } from "./ActivityFeed";
 import { ExpenseForm } from "./ExpenseForm";
 import { MembersPanel } from "./MembersPanel";
 import { Modal } from "./Modal";
@@ -17,6 +17,8 @@ export function GroupDetail({
   onRemoveMember,
   onSaveExpense,
   onDeleteExpense,
+  onAddSettlement,
+  onDeleteSettlement,
 }: {
   group: Group;
   onBack: () => void;
@@ -24,60 +26,68 @@ export function GroupDetail({
   onRemoveMember: (id: string) => void;
   onSaveExpense: (expense: Expense) => void;
   onDeleteExpense: (id: string) => void;
+  onAddSettlement: (fromPersonId: string, toPersonId: string, amountCents: number) => void;
+  onDeleteSettlement: (id: string) => void;
 }) {
   const [showMembers, setShowMembers] = useState(false);
   const [expenseModal, setExpenseModal] = useState<"closed" | "new" | Expense>("closed");
 
   const balances = useMemo(
-    () => computeBalances(group.people, group.expenses),
-    [group.people, group.expenses]
+    () => computeBalances(group.people, group.expenses, group.settlements),
+    [group.people, group.expenses, group.settlements]
   );
   const transactions = useMemo(() => simplifyDebts(balances), [balances]);
 
+  function handleSettle(transaction: Transaction, amountCents: number) {
+    onAddSettlement(transaction.from, transaction.to, amountCents);
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back to groups"
-            className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm hover:bg-surface-muted"
+            className="rounded-full border border-border bg-surface px-4 py-2 text-base hover:bg-surface-muted"
           >
             ← Groups
           </button>
-          <h1 className="font-display text-2xl font-semibold text-text">{group.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-text">{group.name}</h1>
         </div>
         <button
           type="button"
           onClick={() => setShowMembers(true)}
-          className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium hover:bg-surface-muted"
+          className="rounded-full border border-border bg-surface px-5 py-2 text-base font-medium hover:bg-surface-muted"
         >
           Members ({group.people.length})
         </button>
       </div>
 
-      <SettleUpStrip people={group.people} transactions={transactions} />
+      <SettleUpStrip people={group.people} transactions={transactions} onSettle={handleSettle} />
 
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-            Expenses
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+            Activity
           </h2>
           <button
             type="button"
             onClick={() => setExpenseModal("new")}
             disabled={group.people.length === 0}
-            className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full bg-accent px-5 py-2 text-base font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
           >
             + Add expense
           </button>
         </div>
-        <ExpenseList
+        <ActivityFeed
           people={group.people}
           expenses={group.expenses}
-          onEdit={(expense) => setExpenseModal(expense)}
-          onDelete={onDeleteExpense}
+          settlements={group.settlements}
+          onEditExpense={(expense) => setExpenseModal(expense)}
+          onDeleteExpense={onDeleteExpense}
+          onDeleteSettlement={onDeleteSettlement}
         />
       </div>
 

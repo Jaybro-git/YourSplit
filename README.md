@@ -18,10 +18,13 @@ This app was built as a take-home assignment. Condensed brief:
 > the total, and a greedy debt-simplification algorithm to minimize the
 > number of settle-up transactions.
 
-A follow-up pass added multi-group support (create named groups, each with
-its own members and expense log) and a full visual redesign: bento-box
-layout, light theme, white-and-amber palette, modal-driven "+" actions
-instead of tabs.
+Two follow-up passes: (1) multi-group support (named groups, each with its
+own members and expense log) with a bento-box, white-and-amber redesign,
+modal-driven "+" actions instead of tabs; (2) an Apple HIG-flavored pass —
+system font stack, bigger type, the whole app as one centered rounded
+panel — plus an actual **Settle Up** action (recording real payments, not
+just a suggested list) and a unified activity feed that color-codes
+expenses vs. settlements.
 
 ## Using it
 
@@ -34,8 +37,17 @@ instead of tabs.
   (multi-select), and split method (Equal or Exact). Exact mode shows a live
   "remaining" indicator until the per-person amounts sum to the total.
 - The strip at the top of a group is **Settle Up** — the minimal set of
-  payments ("Bob pays Carol Rs. 7,000.00") needed to zero everyone out.
-  Editing or deleting an expense recalculates all of this immediately.
+  payments ("Bob pays Carol Rs. 7,000.00") needed to zero everyone out. Each
+  card has a **Settle** button that opens a payment modal, prefilled with
+  the full suggested amount but editable for a partial payment. Confirming
+  records a `Settlement` (who paid whom, how much, when) that immediately
+  feeds back into balances and Settle Up — a partial payment leaves the
+  remainder as a smaller suggested transaction.
+- **Activity** below Settle Up is a single feed of everything that moved
+  money in the group, newest first: expenses in a light amber card ("Edit" /
+  "Delete"), settlements in a light green card ("Delete" only — a payment is
+  a fact, not something you edit). Editing or deleting anything recalculates
+  balances and Settle Up immediately.
 
 ## Algorithms
 
@@ -68,12 +80,19 @@ by construction — verified in [`src/lib/money.test.ts`](src/lib/money.test.ts)
 
 ### Balances
 
-`computeBalances(people, expenses)` in
+`computeBalances(people, expenses, settlements)` in
 [`src/lib/balances.ts`](src/lib/balances.ts) walks every expense once: the
 payer's balance goes up by the full amount, and each participant's balance
 goes down by their split share. A positive balance means the group owes
 that person money; negative means they owe the group. Balances always sum
 to exactly zero across a group, by construction.
+
+A recorded `Settlement` (an actual payment from one person to another, via
+the Settle Up button) folds in the same way but mirrored: the payer's
+balance goes *up* by the amount paid, the receiver's goes *down* — exactly
+undoing that much of the debt between them. A full settlement zeroes the
+pair out; a partial one just shrinks what's still owed, and the next Settle
+Up render reflects the smaller remainder automatically.
 
 ### Debt simplification (greedy max-creditor / max-debtor)
 
@@ -100,26 +119,45 @@ sum back to their original balance exactly.
 - **Next.js** (App Router) + TypeScript, single client page — no routing,
   no server, state lives in React + `localStorage`.
 - **Tailwind CSS v4**, custom design tokens (color + type) in
-  [`src/app/globals.css`](src/app/globals.css): warm parchment background,
-  white bento cards, amber accent, `Fraunces` (display) + `Manrope` (body).
+  [`src/app/globals.css`](src/app/globals.css): the whole app renders as one
+  centered, large-radius rounded panel floating on a muted warm backdrop
+  (an Apple System-Settings-style "app window"), white bento cards inside on
+  a warm parchment canvas, amber accent, and the system font stack
+  (`-apple-system, BlinkMacSystemFont, "SF Pro Display/Text", …`) so Apple
+  devices render real SF Pro and everything else gets a sane native fallback
+  — deliberately not a look-alike webfont.
 - **Vitest** for the algorithmic core (`src/lib/**/*.test.ts`).
+
+### `useLocalStorage` and hydration
+
+The hook always renders `initialValue` on the first pass (matching what the
+server rendered, since the server never sees `localStorage`), then swaps in
+the persisted value inside a `useEffect` after mount. Reading synchronously
+in the state initializer instead would make the client's first paint
+diverge from the server's and trigger a React hydration error — this was
+hit and fixed during development. Because a group's shape can gain fields
+over time (e.g. `settlements` was added after `people`/`expenses`),
+[`src/app/page.tsx`](src/app/page.tsx) normalizes every group read back out
+of storage (`settlements` defaults to `[]` if missing) so older saved data
+never crashes newer code.
 
 ## Project structure
 
 ```
 src/
-  types/index.ts        Person, Group, Expense, ExpenseSplit, Transaction
+  types/index.ts        Person, Group, Expense, ExpenseSplit, Settlement, Transaction
   hooks/useLocalStorage.ts
   lib/
     money.ts             toCents, formatCurrency, splitEqually, sumSplits
-    balances.ts          computeBalances
+    balances.ts          computeBalances (expenses + settlements)
     settleUp.ts          simplifyDebts (greedy)
     id.ts                generateId, timestampNow
   components/
-    GroupCard.tsx, GroupDetail.tsx   home grid card / group screen
-    SettleUpStrip.tsx                 debt summary strip
+    GroupCard.tsx, GroupDetail.tsx    home grid card / group screen
+    SettleUpStrip.tsx, SettleUpModal.tsx   debt strip + record-a-payment modal
+    ActivityFeed.tsx                  color-coded expense + settlement feed
     MembersPanel.tsx                  members modal (add/remove/balances)
-    ExpenseForm.tsx, ExpenseList.tsx  log + edit/delete expenses
+    ExpenseForm.tsx                   add/edit an expense
     Modal.tsx, NameEntryModal.tsx     shared modal primitives
     AvatarBadge.tsx
   app/page.tsx            orchestrator: groups list <-> group detail

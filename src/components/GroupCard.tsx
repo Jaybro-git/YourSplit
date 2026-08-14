@@ -3,19 +3,32 @@ import { computeBalances } from "@/lib/balances";
 import { simplifyDebts } from "@/lib/settleUp";
 import { AvatarBadge } from "./AvatarBadge";
 
-export function GroupCard({ group, onOpen }: { group: Group; onOpen: () => void }) {
-  const balances = computeBalances(group.people, group.expenses);
+export function GroupCard({
+  group,
+  onOpen,
+  onDelete,
+}: {
+  group: Group;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
+  const balances = computeBalances(group.people, group.expenses, group.settlements);
   const pending = simplifyDebts(balances).length;
+  const settledUp = pending === 0;
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onOpen}
-      className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 text-left shadow-sm transition-shadow hover:shadow-md"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onOpen();
+      }}
+      className="flex cursor-pointer flex-col gap-5 rounded-3xl border border-border bg-surface p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
     >
-      <div className="flex items-start justify-between">
-        <h3 className="font-display text-lg font-semibold text-text">{group.name}</h3>
-        <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent-strong">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-xl font-bold tracking-tight text-text">{group.name}</h3>
+        <span className="flex-shrink-0 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-strong">
           {group.expenses.length} {group.expenses.length === 1 ? "expense" : "expenses"}
         </span>
       </div>
@@ -28,15 +41,29 @@ export function GroupCard({ group, onOpen }: { group: Group; onOpen: () => void 
           <span className="text-sm text-text-muted">No members yet</span>
         )}
         {group.people.length > 5 && (
-          <span className="text-xs font-medium text-text-muted">
+          <span className="text-xs font-semibold text-text-muted">
             +{group.people.length - 5}
           </span>
         )}
       </div>
 
-      <p className="text-sm font-medium text-text-muted">
-        {pending === 0 ? "All settled up" : `${pending} payment${pending === 1 ? "" : "s"} pending`}
-      </p>
-    </button>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-text-muted">
+          {settledUp ? "All settled up" : `${pending} payment${pending === 1 ? "" : "s"} pending`}
+        </p>
+        {settledUp && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Delete "${group.name}"? This can't be undone.`)) onDelete();
+            }}
+            className="text-sm font-semibold text-you-owe hover:underline"
+          >
+            Delete
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

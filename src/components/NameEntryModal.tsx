@@ -35,11 +35,11 @@ export function NameEntryModal({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-accent"
+          className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-base outline-none focus:border-accent"
         />
         <button
           type="submit"
-          className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-2xl bg-accent px-4 py-3 text-base font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
           disabled={!name.trim()}
         >
           {submitLabel}

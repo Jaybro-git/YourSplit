@@ -106,12 +106,12 @@ export function ExpenseForm({
   }
 
   const fieldClass =
-    "w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent";
+    "w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-base outline-none focus:border-accent";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label className="mb-1 block text-sm font-medium">Description</label>
+        <label className="mb-1.5 block text-sm font-semibold text-text">Description</label>
         <input
           type="text"
           value={description}
@@ -122,7 +122,7 @@ export function ExpenseForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">Total Amount (LKR)</label>
+        <label className="mb-1.5 block text-sm font-semibold text-text">Total Amount (LKR)</label>
         <input
           type="number"
           min="0"
@@ -135,7 +135,7 @@ export function ExpenseForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">Paid by</label>
+        <label className="mb-1.5 block text-sm font-semibold text-text">Paid by</label>
         <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)} className={fieldClass}>
           {people.map((p) => (
             <option key={p.id} value={p.id}>
@@ -146,12 +146,12 @@ export function ExpenseForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">Split between</label>
+        <label className="mb-1.5 block text-sm font-semibold text-text">Split between</label>
         <div className="flex flex-col gap-1.5">
           {people.map((p) => (
             <label
               key={p.id}
-              className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm"
+              className="flex items-center gap-2 rounded-2xl border border-border px-4 py-2.5 text-base"
             >
               <input
                 type="checkbox"
@@ -167,14 +167,14 @@ export function ExpenseForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">Split method</label>
-        <div className="flex gap-1 rounded-xl bg-surface-muted p-1">
+        <label className="mb-1.5 block text-sm font-semibold text-text">Split method</label>
+        <div className="flex gap-1 rounded-2xl bg-surface-muted p-1">
           {(["equal", "exact"] as SplitMethod[]).map((method) => (
             <button
               key={method}
               type="button"
               onClick={() => setSplitMethod(method)}
-              className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
+              className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold capitalize transition-colors ${
                 splitMethod === method
                   ? "bg-surface text-accent-strong shadow-sm"
                   : "text-text-muted"
@@ -187,7 +187,7 @@ export function ExpenseForm({
       </div>
 
       {splitMethod === "equal" && participantIds.length > 0 && (
-        <ul className="flex flex-col gap-1 rounded-xl border border-border p-3 text-sm">
+        <ul className="flex flex-col gap-1.5 rounded-2xl border border-border p-4 text-sm">
           {equalPreview.map((split) => {
             const person = people.find((p) => p.id === split.personId);
             return (
@@ -201,12 +201,12 @@ export function ExpenseForm({
       )}
 
       {splitMethod === "exact" && participantIds.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-xl border border-border p-3">
+        <div className="flex flex-col gap-2.5 rounded-2xl border border-border p-4">
           {participantIds.map((personId) => {
             const person = people.find((p) => p.id === personId);
             return (
               <div key={personId} className="flex items-center justify-between gap-3">
-                <span className="text-sm">{person?.name}</span>
+                <span className="text-base">{person?.name}</span>
                 <input
                   type="number"
                   min="0"
@@ -216,7 +216,7 @@ export function ExpenseForm({
                     setExactAmounts((prev) => ({ ...prev, [personId]: e.target.value }))
                   }
                   placeholder="0.00"
-                  className="w-28 rounded-lg border border-border bg-surface px-2 py-1 text-right text-sm outline-none focus:border-accent"
+                  className="w-28 rounded-xl border border-border bg-surface px-2.5 py-1.5 text-right text-sm outline-none focus:border-accent"
                 />
               </div>
             );
@@ -237,14 +237,14 @@ export function ExpenseForm({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-2xl bg-accent px-5 py-2.5 text-base font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
         >
           {editingExpense ? "Save changes" : "Add expense"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-surface-muted"
+          className="rounded-2xl border border-border px-5 py-2.5 text-base font-medium hover:bg-surface-muted"
         >
           Cancel
         </button>

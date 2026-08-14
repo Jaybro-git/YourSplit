@@ -52,24 +52,24 @@ export function MembersPanel({
 
   return (
     <Modal title="Members" onClose={onClose}>
-      <form onSubmit={handleAdd} className="mb-4 flex gap-2">
+      <form onSubmit={handleAdd} className="mb-5 flex gap-2">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Add a member's name"
-          className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+          className="flex-1 rounded-2xl border border-border bg-surface px-4 py-2.5 text-base outline-none focus:border-accent"
         />
         <button
           type="submit"
-          className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
+          className="rounded-2xl bg-accent px-5 py-2.5 text-base font-semibold text-white hover:bg-accent-strong"
         >
           +
         </button>
       </form>
 
       {blockedPerson && (
-        <div className="mb-4 rounded-xl border border-you-owe/30 bg-you-owe/10 p-3 text-sm text-you-owe">
+        <div className="mb-4 rounded-2xl border border-you-owe/30 bg-you-owe/10 p-4 text-sm text-you-owe">
           Can&apos;t remove <strong>{blockedPerson.name}</strong> — referenced in{" "}
           {blockedRefs.length} expense{blockedRefs.length === 1 ? "" : "s"}:{" "}
           {blockedRefs.map((e) => e.description || "Untitled").join(", ")}. Delete those
@@ -77,20 +77,20 @@ export function MembersPanel({
         </div>
       )}
 
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-2.5">
         {people.map((person) => {
           const amount = balances[person.id] ?? 0;
           return (
             <li
               key={person.id}
-              className="flex items-center justify-between rounded-xl border border-border px-3 py-2.5"
+              className="flex items-center justify-between rounded-2xl border border-border px-4 py-3"
             >
               <div className="flex items-center gap-3">
                 <AvatarBadge id={person.id} name={person.name} />
                 <div>
-                  <p className="text-sm font-medium">{person.name}</p>
+                  <p className="text-base font-semibold">{person.name}</p>
                   <p
-                    className={`text-xs font-medium ${
+                    className={`text-sm font-medium ${
                       amount === 0
                         ? "text-text-muted"
                         : amount > 0
@@ -109,7 +109,7 @@ export function MembersPanel({
               <button
                 type="button"
                 onClick={() => handleRemove(person.id)}
-                className="rounded-full px-2 py-1 text-text-muted hover:bg-surface-muted hover:text-you-owe"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-text-muted hover:bg-surface-muted hover:text-you-owe"
                 aria-label={`Remove ${person.name}`}
               >
                 ✕
