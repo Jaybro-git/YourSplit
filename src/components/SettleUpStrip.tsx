@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Person, Transaction } from "@/types";
 import { formatCurrency } from "@/lib/money";
+import { lightCardColorForId } from "@/lib/palette";
 import { AvatarBadge } from "./AvatarBadge";
 import { SettleUpModal } from "./SettleUpModal";
 
@@ -35,30 +36,33 @@ export function SettleUpStrip({
         Settle up
       </h2>
       <div className="flex gap-4 overflow-x-auto pb-1">
-        {transactions.map((t, i) => (
-          <div
-            key={i}
-            className="flex flex-shrink-0 items-center gap-4 rounded-3xl border border-border bg-surface px-5 py-4 shadow-sm"
-          >
-            <AvatarBadge id={t.from} name={nameFor(people, t.from)} size="lg" />
-            <div className="text-base leading-tight whitespace-nowrap">
-              <p>
-                <strong>{nameFor(people, t.from)}</strong> pays{" "}
-                <strong>{nameFor(people, t.to)}</strong>
-              </p>
-              <p className="font-semibold text-accent-strong tabular-nums">
-                {formatCurrency(t.amountCents)}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSettling(t)}
-              className="ml-1 flex-shrink-0 rounded-full bg-owed-to-you px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+        {transactions.map((t, i) => {
+          const { bg, border } = lightCardColorForId(t.from);
+          return (
+            <div
+              key={i}
+              className={`flex flex-shrink-0 items-center gap-4 rounded-3xl border ${border} ${bg} px-5 py-4 shadow-sm`}
             >
-              Settle
-            </button>
-          </div>
-        ))}
+              <AvatarBadge id={t.from} name={nameFor(people, t.from)} size="lg" />
+              <div className="text-base leading-tight whitespace-nowrap">
+                <p>
+                  <strong>{nameFor(people, t.from)}</strong> pays{" "}
+                  <strong>{nameFor(people, t.to)}</strong>
+                </p>
+                <p className="font-bold text-text tabular-nums">
+                  {formatCurrency(t.amountCents)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSettling(t)}
+                className="ml-1 flex-shrink-0 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-text hover:bg-surface-muted"
+              >
+                Settle
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       {settling && (

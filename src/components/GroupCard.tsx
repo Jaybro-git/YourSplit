@@ -1,6 +1,7 @@
 import type { Group } from "@/types";
 import { computeBalances } from "@/lib/balances";
 import { simplifyDebts } from "@/lib/settleUp";
+import { lightCardColorForId } from "@/lib/palette";
 import { AvatarBadge } from "./AvatarBadge";
 
 export function GroupCard({
@@ -15,6 +16,7 @@ export function GroupCard({
   const balances = computeBalances(group.people, group.expenses, group.settlements);
   const pending = simplifyDebts(balances).length;
   const settledUp = pending === 0;
+  const { bg, border } = lightCardColorForId(group.id);
 
   return (
     <div
@@ -24,11 +26,11 @@ export function GroupCard({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onOpen();
       }}
-      className="flex cursor-pointer flex-col gap-5 rounded-3xl border border-border bg-surface p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+      className={`flex cursor-pointer flex-col gap-5 rounded-3xl border ${border} ${bg} p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-md`}
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-xl font-bold tracking-tight text-text">{group.name}</h3>
-        <span className="flex-shrink-0 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-strong">
+        <span className="flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-text-muted">
           {group.expenses.length} {group.expenses.length === 1 ? "expense" : "expenses"}
         </span>
       </div>

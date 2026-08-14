@@ -1,20 +1,4 @@
-const COLORS = [
-  "bg-amber-500",
-  "bg-orange-500",
-  "bg-rose-500",
-  "bg-emerald-600",
-  "bg-teal-600",
-  "bg-sky-600",
-  "bg-violet-600",
-];
-
-function colorForId(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  }
-  return COLORS[Math.abs(hash) % COLORS.length];
-}
+import { solidColorForId } from "@/lib/palette";
 
 export function AvatarBadge({
   id,
@@ -31,7 +15,7 @@ export function AvatarBadge({
 
   return (
     <span
-      className={`inline-flex ${dimensions} flex-shrink-0 items-center justify-center rounded-full font-semibold text-white ${colorForId(
+      className={`inline-flex ${dimensions} flex-shrink-0 items-center justify-center rounded-full font-semibold text-white ${solidColorForId(
         id
       )}`}
     >

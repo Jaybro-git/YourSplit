@@ -80,10 +80,13 @@ export function MembersPanel({
       <ul className="flex flex-col gap-2.5">
         {people.map((person) => {
           const amount = balances[person.id] ?? 0;
+          const bg = amount === 0 ? "bg-surface" : amount > 0 ? "bg-emerald-50" : "bg-rose-50";
+          const border =
+            amount === 0 ? "border-border" : amount > 0 ? "border-emerald-200" : "border-rose-200";
           return (
             <li
               key={person.id}
-              className="flex items-center justify-between rounded-2xl border border-border px-4 py-3"
+              className={`flex items-center justify-between rounded-2xl border ${border} ${bg} px-4 py-3`}
             >
               <div className="flex items-center gap-3">
                 <AvatarBadge id={person.id} name={person.name} />
