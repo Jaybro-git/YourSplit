@@ -97,16 +97,16 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg-outer p-4 md:p-8">
-      <div className="flex min-h-[85vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] border border-border bg-surface shadow-2xl">
-        <header className="border-b border-border px-8 py-6 md:px-10">
+    <div className="flex min-h-screen items-center justify-center bg-bg-outer p-4 md:p-8 print:block print:min-h-0 print:bg-white print:p-0">
+      <div className="flex min-h-[85vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] border border-border bg-surface shadow-2xl print:min-h-0 print:max-w-none print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
+        <header className="border-b border-border px-8 py-6 md:px-10 print:hidden">
           <h1 className="text-2xl font-bold tracking-tight text-accent-strong">Your Split</h1>
           <p className="mt-1 text-base text-text-muted">
             Split group expenses and settle up.
           </p>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-bg px-8 py-8 md:px-10">
+        <main className="flex-1 overflow-y-auto bg-bg px-8 py-8 md:px-10 print:overflow-visible print:h-auto print:bg-white print:p-0">
           {selectedGroup ? (
             <GroupDetail
               group={selectedGroup}

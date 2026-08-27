@@ -9,6 +9,7 @@ import { ActivityFeed } from "./ActivityFeed";
 import { ExpenseForm } from "./ExpenseForm";
 import { MembersPanel } from "./MembersPanel";
 import { Modal } from "./Modal";
+import { GroupSummaryPrint } from "./GroupSummaryPrint";
 
 export function GroupDetail({
   group,
@@ -44,6 +45,7 @@ export function GroupDetail({
 
   return (
     <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8 print:hidden">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
@@ -56,13 +58,22 @@ export function GroupDetail({
           </button>
           <h1 className="text-3xl font-bold tracking-tight text-text">{group.name}</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowMembers(true)}
-          className="rounded-full border border-border bg-surface px-5 py-2 text-base font-medium hover:bg-surface-muted"
-        >
-          Members ({group.people.length})
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="rounded-full border border-border bg-surface px-5 py-2 text-base font-medium hover:bg-surface-muted"
+          >
+            Export PDF
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowMembers(true)}
+            className="rounded-full border border-border bg-surface px-5 py-2 text-base font-medium hover:bg-surface-muted"
+          >
+            Members ({group.people.length})
+          </button>
+        </div>
       </div>
 
       <SettleUpStrip people={group.people} transactions={transactions} onSettle={handleSettle} />
@@ -119,6 +130,9 @@ export function GroupDetail({
           onClose={() => setShowMembers(false)}
         />
       )}
+      </div>
+
+      <GroupSummaryPrint group={group} balances={balances} transactions={transactions} />
     </div>
   );
 }
