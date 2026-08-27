@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background print:block print:h-auto print:overflow-visible">
+    <div className="flex h-dvh overflow-hidden bg-background print:block print:h-auto print:overflow-visible">
       {/* Sidebar is its own full-height column with its own internal scroll
           (see SidebarContent) — it never scrolls with the center panel. */}
       <aside className="hidden h-full w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block print:hidden">
