@@ -1,64 +1,35 @@
-const HUES = [
-  "amber",
-  "rose",
-  "teal",
-  "sky",
-  "violet",
-  "emerald",
-  "orange",
-  "fuchsia",
-] as const;
+// Entity hue palette — used for avatars, group accent cards, and settle-up
+// cards. Each id hashes to one of 8 hues defined as CSS variables in
+// globals.css (--hue-N-solid/-soft/-line, light + dark values). Returning
+// CSS var() strings instead of Tailwind class names sidesteps the
+// scanner-visibility constraint the old class-string approach needed, and
+// gets dark mode for free since the variables themselves flip under `.dark`.
+const HUE_COUNT = 8;
 
-type Hue = (typeof HUES)[number];
-
-// Full class strings, written out literally so Tailwind's scanner can see
-// them (dynamic `bg-${hue}-500` template strings won't be picked up).
-const SOLID: Record<Hue, string> = {
-  amber: "bg-amber-500",
-  rose: "bg-rose-500",
-  teal: "bg-teal-600",
-  sky: "bg-sky-600",
-  violet: "bg-violet-600",
-  emerald: "bg-emerald-600",
-  orange: "bg-orange-500",
-  fuchsia: "bg-fuchsia-500",
-};
-
-const LIGHT_BG: Record<Hue, string> = {
-  amber: "bg-amber-50",
-  rose: "bg-rose-50",
-  teal: "bg-teal-50",
-  sky: "bg-sky-50",
-  violet: "bg-violet-50",
-  emerald: "bg-emerald-50",
-  orange: "bg-orange-50",
-  fuchsia: "bg-fuchsia-50",
-};
-
-const LIGHT_BORDER: Record<Hue, string> = {
-  amber: "border-amber-200",
-  rose: "border-rose-200",
-  teal: "border-teal-200",
-  sky: "border-sky-200",
-  violet: "border-violet-200",
-  emerald: "border-emerald-200",
-  orange: "border-orange-200",
-  fuchsia: "border-fuchsia-200",
-};
-
-function hueForId(id: string): Hue {
+function hashId(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
   }
-  return HUES[Math.abs(hash) % HUES.length];
+  return Math.abs(hash);
+}
+
+export function hueIndexForId(id: string): number {
+  return hashId(id) % HUE_COUNT;
 }
 
 export function solidColorForId(id: string): string {
-  return SOLID[hueForId(id)];
+  return `var(--hue-${hueIndexForId(id)}-solid)`;
+}
+
+export function softColorForId(id: string): string {
+  return `var(--hue-${hueIndexForId(id)}-soft)`;
+}
+
+export function lineColorForId(id: string): string {
+  return `var(--hue-${hueIndexForId(id)}-line)`;
 }
 
 export function lightCardColorForId(id: string): { bg: string; border: string } {
-  const hue = hueForId(id);
-  return { bg: LIGHT_BG[hue], border: LIGHT_BORDER[hue] };
+  return { bg: softColorForId(id), border: lineColorForId(id) };
 }

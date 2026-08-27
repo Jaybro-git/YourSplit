@@ -1,41 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import { X } from "lucide-react";
 import type { Expense, Person } from "@/types";
 import { formatCurrency } from "@/lib/money";
 import { AvatarBadge } from "./AvatarBadge";
-import { Modal } from "./Modal";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function MembersPanel({
   people,
   expenses,
   balances,
-  onAdd,
   onRemove,
-  onClose,
+  panelPadClassName,
 }: {
   people: Person[];
   expenses: Expense[];
   balances: Record<string, number>;
-  onAdd: (name: string) => void;
   onRemove: (id: string) => void;
-  onClose: () => void;
+  panelPadClassName?: string;
 }) {
-  const [name, setName] = useState("");
   const [blockedId, setBlockedId] = useState<string | null>(null);
 
   function referencingExpenses(personId: string): Expense[] {
-    return expenses.filter(
-      (e) => e.paidBy === personId || e.participantIds.includes(personId)
-    );
-  }
-
-  function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    onAdd(trimmed);
-    setName("");
+    return expenses.filter((e) => e.paidBy === personId || e.participantIds.includes(personId));
   }
 
   function handleRemove(personId: string) {
@@ -51,79 +40,68 @@ export function MembersPanel({
   const blockedRefs = blockedId ? referencingExpenses(blockedId) : [];
 
   return (
-    <Modal title="Members" onClose={onClose}>
-      <form onSubmit={handleAdd} className="mb-5 flex gap-2">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Add a member's name"
-          className="flex-1 rounded-2xl border border-border bg-surface px-4 py-2.5 text-base outline-none focus:border-accent"
-        />
-        <button
-          type="submit"
-          className="rounded-2xl bg-accent px-5 py-2.5 text-base font-semibold text-white hover:bg-accent-strong"
-        >
-          +
-        </button>
-      </form>
-
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       {blockedPerson && (
-        <div className="mb-4 rounded-2xl border border-you-owe/30 bg-you-owe/10 p-4 text-sm text-you-owe">
-          Can&apos;t remove <strong>{blockedPerson.name}</strong> — referenced in{" "}
-          {blockedRefs.length} expense{blockedRefs.length === 1 ? "" : "s"}:{" "}
-          {blockedRefs.map((e) => e.description || "Untitled").join(", ")}. Delete those
-          expenses first.
+        <div
+          className={cn(
+            "shrink-0 rounded-lg border border-negative/30 bg-negative-soft p-3 text-sm text-negative",
+            panelPadClassName
+          )}
+        >
+          Can&apos;t remove <strong>{blockedPerson.name}</strong> — referenced in {blockedRefs.length}{" "}
+          expense{blockedRefs.length === 1 ? "" : "s"}:{" "}
+          {blockedRefs.map((e) => e.description || "Untitled").join(", ")}. Delete those expenses
+          first.
         </div>
       )}
 
-      <ul className="flex flex-col gap-2.5">
-        {people.map((person) => {
-          const amount = balances[person.id] ?? 0;
-          const bg = amount === 0 ? "bg-surface" : amount > 0 ? "bg-emerald-50" : "bg-rose-50";
-          const border =
-            amount === 0 ? "border-border" : amount > 0 ? "border-emerald-200" : "border-rose-200";
-          return (
-            <li
-              key={person.id}
-              className={`flex items-center justify-between rounded-2xl border ${border} ${bg} px-4 py-3`}
-            >
-              <div className="flex items-center gap-3">
-                <AvatarBadge id={person.id} name={person.name} />
-                <div>
-                  <p className="text-base font-semibold">{person.name}</p>
-                  <p
-                    className={`text-sm font-medium ${
-                      amount === 0
-                        ? "text-text-muted"
-                        : amount > 0
-                        ? "text-owed-to-you"
-                        : "text-you-owe"
-                    }`}
-                  >
-                    {amount === 0
-                      ? "Settled up"
-                      : amount > 0
-                      ? `Is owed ${formatCurrency(amount)}`
-                      : `Owes ${formatCurrency(-amount)}`}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleRemove(person.id)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-text-muted hover:bg-surface-muted hover:text-you-owe"
-                aria-label={`Remove ${person.name}`}
+      <div className={cn("min-h-0 flex-1 overflow-y-auto pb-20 sm:pb-6", panelPadClassName)}>
+        <ul className="flex flex-col gap-2">
+          {people.map((person) => {
+            const amount = balances[person.id] ?? 0;
+            return (
+              <li
+                key={person.id}
+                className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
               >
-                ✕
-              </button>
-            </li>
-          );
-        })}
-        {people.length === 0 && (
-          <li className="text-sm text-text-muted">No members yet. Add someone above.</li>
-        )}
-      </ul>
-    </Modal>
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <AvatarBadge id={person.id} name={person.name} size="sm" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{person.name}</p>
+                    <p
+                      className={cn(
+                        "text-xs font-medium",
+                        amount === 0
+                          ? "text-muted-foreground"
+                          : amount > 0
+                            ? "text-positive"
+                            : "text-negative"
+                      )}
+                    >
+                      {amount === 0
+                        ? "Settled up"
+                        : amount > 0
+                          ? `Owed ${formatCurrency(amount)}`
+                          : `Owes ${formatCurrency(-amount)}`}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handleRemove(person.id)}
+                  aria-label={`Remove ${person.name}`}
+                >
+                  <X className="size-4" />
+                </Button>
+              </li>
+            );
+          })}
+          {people.length === 0 && (
+            <li className="text-sm text-muted-foreground">No members yet. Add someone to get started.</li>
+          )}
+        </ul>
+      </div>
+    </div>
   );
 }

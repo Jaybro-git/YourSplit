@@ -1,14 +1,47 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import type { Person, Transaction } from "@/types";
 import { formatCurrency } from "@/lib/money";
 import { lightCardColorForId } from "@/lib/palette";
 import { AvatarBadge } from "./AvatarBadge";
 import { SettleUpModal } from "./SettleUpModal";
+import { Button } from "@/components/ui/button";
 
 function nameFor(people: Person[], id: string): string {
   return people.find((p) => p.id === id)?.name ?? "Unknown";
+}
+
+function SettleRow({
+  people,
+  transaction,
+  onOpen,
+}: {
+  people: Person[];
+  transaction: Transaction;
+  onOpen: () => void;
+}) {
+  const { bg, border } = lightCardColorForId(transaction.from);
+  return (
+    <div
+      className="flex w-full items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm"
+      style={{ backgroundColor: bg, borderColor: border }}
+    >
+      <AvatarBadge id={transaction.from} name={nameFor(people, transaction.from)} size="lg" />
+      <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+      <AvatarBadge id={transaction.to} name={nameFor(people, transaction.to)} size="lg" />
+      <div className="ml-1 min-w-0 flex-1 text-sm leading-tight">
+        <p className="truncate font-medium">
+          {nameFor(people, transaction.from)} → {nameFor(people, transaction.to)}
+        </p>
+        <p className="font-bold tabular-nums">{formatCurrency(transaction.amountCents)}</p>
+      </div>
+      <Button size="sm" variant="outline" onClick={onOpen} className="ml-1 shrink-0">
+        Settle
+      </Button>
+    </div>
+  );
 }
 
 export function SettleUpStrip({
@@ -24,7 +57,7 @@ export function SettleUpStrip({
 
   if (transactions.length === 0) {
     return (
-      <div className="rounded-3xl border border-border bg-surface-muted px-6 py-5 text-base font-medium text-owed-to-you">
+      <div className="rounded-2xl border border-positive-soft bg-positive-soft px-5 py-4 text-sm font-medium text-positive">
         Everyone&apos;s settled up.
       </div>
     );
@@ -32,37 +65,10 @@ export function SettleUpStrip({
 
   return (
     <div>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">
-        Settle up
-      </h2>
-      <div className="flex gap-4 overflow-x-auto pb-1">
-        {transactions.map((t, i) => {
-          const { bg, border } = lightCardColorForId(t.from);
-          return (
-            <div
-              key={i}
-              className={`flex flex-shrink-0 items-center gap-4 rounded-3xl border ${border} ${bg} px-5 py-4 shadow-sm`}
-            >
-              <AvatarBadge id={t.from} name={nameFor(people, t.from)} size="lg" />
-              <div className="text-base leading-tight whitespace-nowrap">
-                <p>
-                  <strong>{nameFor(people, t.from)}</strong> pays{" "}
-                  <strong>{nameFor(people, t.to)}</strong>
-                </p>
-                <p className="font-bold text-text tabular-nums">
-                  {formatCurrency(t.amountCents)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSettling(t)}
-                className="ml-1 flex-shrink-0 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-text hover:bg-surface-muted"
-              >
-                Settle
-              </button>
-            </div>
-          );
-        })}
+      <div className="flex flex-col gap-2.5">
+        {transactions.map((t, i) => (
+          <SettleRow key={i} people={people} transaction={t} onOpen={() => setSettling(t)} />
+        ))}
       </div>
 
       {settling && (

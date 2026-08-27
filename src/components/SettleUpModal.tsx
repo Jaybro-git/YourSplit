@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";
 import type { Person, Transaction } from "@/types";
 import { formatCurrency, toCents } from "@/lib/money";
 import { AvatarBadge } from "./AvatarBadge";
-import { Modal } from "./Modal";
+import { ResponsiveDialog } from "@/components/ui-ext/ResponsiveDialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function nameFor(people: Person[], id: string): string {
   return people.find((p) => p.id === id)?.name ?? "Unknown";
@@ -27,33 +32,34 @@ export function SettleUpModal({
   const amountCents = toCents(parseFloat(amountRs) || 0);
   const canSubmit = amountCents > 0 && amountCents <= fullAmount;
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
     onConfirm(amountCents);
+    toast.success(
+      `${nameFor(people, transaction.from)} paid ${nameFor(people, transaction.to)} ${formatCurrency(amountCents)}`
+    );
     onClose();
   }
 
   return (
-    <Modal title="Record a payment" onClose={onClose}>
+    <ResponsiveDialog open onOpenChange={(open) => !open && onClose()} title="Record a payment">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="flex items-center justify-center gap-4 rounded-2xl bg-surface-muted px-4 py-5">
+        <div className="flex items-center justify-center gap-4 rounded-xl bg-muted px-4 py-5">
           <div className="flex flex-col items-center gap-1.5">
             <AvatarBadge id={transaction.from} name={nameFor(people, transaction.from)} size="lg" />
             <span className="text-sm font-medium">{nameFor(people, transaction.from)}</span>
           </div>
-          <span className="text-xl text-text-muted">→</span>
+          <ArrowRight className="size-5 text-muted-foreground" />
           <div className="flex flex-col items-center gap-1.5">
             <AvatarBadge id={transaction.to} name={nameFor(people, transaction.to)} size="lg" />
             <span className="text-sm font-medium">{nameFor(people, transaction.to)}</span>
           </div>
         </div>
 
-        <div>
-          <label htmlFor="settle-amount" className="mb-1 block text-sm font-semibold text-text">
-            Amount (LKR)
-          </label>
-          <input
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="settle-amount">Amount (LKR)</Label>
+          <Input
             id="settle-amount"
             type="number"
             min="0.01"
@@ -62,28 +68,28 @@ export function SettleUpModal({
             autoFocus
             value={amountRs}
             onChange={(e) => setAmountRs(e.target.value)}
-            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-lg font-semibold outline-none focus:border-accent"
+            className="text-lg font-semibold"
           />
-          <div className="mt-2 flex items-center justify-between text-xs text-text-muted">
+          <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
             <span>Full amount owed: {formatCurrency(fullAmount)}</span>
             <button
               type="button"
               onClick={() => setAmountRs((fullAmount / 100).toString())}
-              className="font-semibold text-accent-strong hover:underline"
+              className="font-semibold text-primary hover:underline"
             >
               Use full amount
             </button>
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={!canSubmit}
-          className="rounded-2xl bg-owed-to-you px-4 py-3 text-base font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="bg-positive text-positive-foreground hover:bg-positive/90"
         >
           Record payment of {amountCents > 0 ? formatCurrency(amountCents) : "..."}
-        </button>
+        </Button>
       </form>
-    </Modal>
+    </ResponsiveDialog>
   );
 }

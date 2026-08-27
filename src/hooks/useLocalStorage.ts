@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 // First render must match the server (which never has access to
 // localStorage), so we start from `initialValue` unconditionally and only
 // swap in the persisted value after mount, once hydration is safely past.
+// `hydrated` is surfaced so callers can distinguish "still loading" from
+// "genuinely empty" (e.g. a route showing a skeleton vs. a not-found state).
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [value, setValue] = useState<T>(initialValue);
   const [hydrated, setHydrated] = useState(false);
@@ -31,5 +33,5 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     }
   }, [key, value, hydrated]);
 
-  return [value, setValue] as const;
+  return [value, setValue, hydrated] as const;
 }

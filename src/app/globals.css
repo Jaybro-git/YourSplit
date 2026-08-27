@@ -1,47 +1,199 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg-outer: #e7e0d0;
-  --bg: #fbf7ef;
-  --surface: #ffffff;
-  --surface-muted: #fff6e6;
-  --border: #efe2c9;
-  --text: #2a2118;
-  --text-muted: #8a7a64;
-  --accent: #f59e0b;
-  --accent-strong: #b45309;
-  --accent-soft: #fde9c8;
-  --owed-to-you: #15803d;
-  --you-owe: #be123c;
-  --font-system:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI",
-    Roboto, Helvetica, Arial, sans-serif;
+  --radius: 0.75rem;
+
+  /* Neutral surfaces — cool zinc, not warm gray */
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.967 0.001 286);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.967 0.001 286);
+  --muted-foreground: oklch(0.492 0.007 286);
+  --accent: oklch(0.967 0.001 286);
+  --accent-foreground: oklch(0.205 0 0);
+  --border: oklch(0.911 0.004 286);
+  --input: oklch(0.911 0.004 286);
+
+  /* Brand — emerald */
+  --primary: oklch(0.52 0.14 160);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.52 0.14 160);
+
+  /* Money semantics */
+  --positive: oklch(0.52 0.13 152);
+  --positive-foreground: oklch(0.985 0 0);
+  --positive-soft: oklch(0.95 0.03 152);
+  --negative: oklch(0.58 0.16 21);
+  --negative-foreground: oklch(0.985 0 0);
+  --negative-soft: oklch(0.95 0.03 21);
+  --destructive: oklch(0.58 0.16 21);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* Sidebar */
+  --sidebar: oklch(0.967 0.001 286);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.52 0.14 160);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.93 0.004 286);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.911 0.004 286);
+  --sidebar-ring: oklch(0.52 0.14 160);
+
+  /* Entity hues (avatars, group accents) — "-solid" is the ink color (used as
+     text/icon color on a light chip, and as accent lines); "-soft" is the
+     light pastel wash used as background; "-line" borders it. Fixed
+     lightness/chroma per role, hue rotates per entity id. */
+  --hue-0-solid: oklch(0.48 0.16 265);
+  --hue-0-soft: oklch(0.93 0.045 265);
+  --hue-0-line: oklch(0.83 0.07 265);
+  --hue-1-solid: oklch(0.5 0.17 300);
+  --hue-1-soft: oklch(0.93 0.045 300);
+  --hue-1-line: oklch(0.83 0.07 300);
+  --hue-2-solid: oklch(0.52 0.18 340);
+  --hue-2-soft: oklch(0.93 0.045 340);
+  --hue-2-line: oklch(0.83 0.07 340);
+  --hue-3-solid: oklch(0.55 0.17 25);
+  --hue-3-soft: oklch(0.93 0.045 25);
+  --hue-3-line: oklch(0.83 0.07 25);
+  --hue-4-solid: oklch(0.58 0.13 65);
+  --hue-4-soft: oklch(0.93 0.045 65);
+  --hue-4-line: oklch(0.83 0.07 65);
+  --hue-5-solid: oklch(0.5 0.13 145);
+  --hue-5-soft: oklch(0.93 0.045 145);
+  --hue-5-line: oklch(0.83 0.07 145);
+  --hue-6-solid: oklch(0.48 0.11 195);
+  --hue-6-soft: oklch(0.93 0.045 195);
+  --hue-6-line: oklch(0.83 0.07 195);
+  --hue-7-solid: oklch(0.45 0.14 230);
+  --hue-7-soft: oklch(0.93 0.045 230);
+  --hue-7-line: oklch(0.83 0.07 230);
+}
+
+.dark {
+  --background: oklch(0.16 0.003 286);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.205 0.003 286);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.205 0.003 286);
+  --popover-foreground: oklch(0.97 0 0);
+  --secondary: oklch(0.27 0.004 286);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.27 0.004 286);
+  --muted-foreground: oklch(0.68 0.006 286);
+  --accent: oklch(0.27 0.004 286);
+  --accent-foreground: oklch(0.97 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+
+  --primary: oklch(0.68 0.15 160);
+  --primary-foreground: oklch(0.145 0 0);
+  --ring: oklch(0.68 0.15 160);
+
+  --positive: oklch(0.72 0.14 152);
+  --positive-foreground: oklch(0.145 0 0);
+  --positive-soft: oklch(0.28 0.05 152);
+  --negative: oklch(0.7 0.15 21);
+  --negative-foreground: oklch(0.145 0 0);
+  --negative-soft: oklch(0.3 0.06 21);
+  --destructive: oklch(0.7 0.15 21);
+  --destructive-foreground: oklch(0.145 0 0);
+
+  --sidebar: oklch(0.19 0.003 286);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.68 0.15 160);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.27 0.004 286);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.68 0.15 160);
+
+  /* "-solid" becomes the light, readable-on-dark ink/chip color; "-soft" is
+     the dark pastel wash background; "-line" borders it. */
+  --hue-0-solid: oklch(0.75 0.12 265);
+  --hue-0-soft: oklch(0.26 0.05 265);
+  --hue-0-line: oklch(0.38 0.07 265);
+  --hue-1-solid: oklch(0.76 0.13 300);
+  --hue-1-soft: oklch(0.26 0.05 300);
+  --hue-1-line: oklch(0.38 0.07 300);
+  --hue-2-solid: oklch(0.76 0.14 340);
+  --hue-2-soft: oklch(0.26 0.05 340);
+  --hue-2-line: oklch(0.38 0.07 340);
+  --hue-3-solid: oklch(0.76 0.13 25);
+  --hue-3-soft: oklch(0.26 0.05 25);
+  --hue-3-line: oklch(0.38 0.07 25);
+  --hue-4-solid: oklch(0.78 0.1 65);
+  --hue-4-soft: oklch(0.26 0.05 65);
+  --hue-4-line: oklch(0.38 0.07 65);
+  --hue-5-solid: oklch(0.74 0.1 145);
+  --hue-5-soft: oklch(0.26 0.05 145);
+  --hue-5-line: oklch(0.38 0.07 145);
+  --hue-6-solid: oklch(0.72 0.09 195);
+  --hue-6-soft: oklch(0.26 0.05 195);
+  --hue-6-line: oklch(0.38 0.07 195);
+  --hue-7-solid: oklch(0.7 0.11 230);
+  --hue-7-soft: oklch(0.26 0.05 230);
+  --hue-7-line: oklch(0.38 0.07 230);
 }
 
 @theme inline {
-  --color-bg-outer: var(--bg-outer);
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-muted: var(--surface-muted);
-  --color-border: var(--border);
-  --color-text: var(--text);
-  --color-text-muted: var(--text-muted);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
-  --color-accent-strong: var(--accent-strong);
-  --color-accent-soft: var(--accent-soft);
-  --color-owed-to-you: var(--owed-to-you);
-  --color-you-owe: var(--you-owe);
-  --font-sans: var(--font-system);
-}
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-html {
-  font-size: 17px;
+  --color-positive: var(--positive);
+  --color-positive-foreground: var(--positive-foreground);
+  --color-positive-soft: var(--positive-soft);
+  --color-negative: var(--negative);
+  --color-negative-foreground: var(--negative-foreground);
+  --color-negative-soft: var(--negative-soft);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 12px);
+  --radius-3xl: calc(var(--radius) + 20px);
 }
 
 body {
-  background: var(--bg-outer);
-  color: var(--text);
-  font-family: var(--font-system);
+  overflow-x: clip;
   letter-spacing: -0.011em;
 }
 
@@ -50,4 +202,36 @@ h2,
 h3 {
   letter-spacing: -0.02em;
   text-wrap: balance;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Export PDF is always light, regardless of the active theme. */
+@media print {
+  :root,
+  .dark {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --muted-foreground: oklch(0.492 0.007 286);
+    --border: oklch(0.85 0.004 286);
+    --positive: oklch(0.5 0.13 152);
+    --negative: oklch(0.55 0.16 21);
+    color-scheme: light;
+  }
+  html,
+  body {
+    background: white;
+  }
 }

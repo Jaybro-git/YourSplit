@@ -1,18 +1,34 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import type { Group } from "@/types";
 import { computeBalances } from "@/lib/balances";
 import { simplifyDebts } from "@/lib/settleUp";
 import { lightCardColorForId } from "@/lib/palette";
 import { AvatarBadge } from "./AvatarBadge";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-export function GroupCard({
-  group,
-  onOpen,
-  onDelete,
-}: {
-  group: Group;
-  onOpen: () => void;
-  onDelete: () => void;
-}) {
+export function GroupCard({ group, onDelete }: { group: Group; onDelete: () => void }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const balances = computeBalances(group.people, group.expenses, group.settlements);
   const pending = simplifyDebts(balances).length;
   const settledUp = pending === 0;
@@ -20,52 +36,75 @@ export function GroupCard({
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onOpen();
-      }}
-      className={`flex cursor-pointer flex-col gap-5 rounded-3xl border ${border} ${bg} p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-md`}
+      className="group relative flex flex-col gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+      style={{ backgroundColor: bg, borderColor: border }}
     >
+      <Link
+        href={`/g/${group.id}`}
+        className="absolute inset-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label={`Open ${group.name}`}
+      />
+
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-xl font-bold tracking-tight text-text">{group.name}</h3>
-        <span className="flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          {group.expenses.length} {group.expenses.length === 1 ? "expense" : "expenses"}
-        </span>
+        <h3 className="truncate text-lg font-semibold tracking-tight text-foreground">
+          {group.name}
+        </h3>
+        <div className="relative z-10 flex shrink-0 items-center gap-1">
+          <span className="text-xs font-medium whitespace-nowrap text-muted-foreground">
+            {group.expenses.length} {group.expenses.length === 1 ? "expense" : "expenses"}
+          </span>
+          {settledUp && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm" aria-label="Group actions">
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
+                  <Trash2 className="size-4" /> Delete group
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center -space-x-2">
         {group.people.slice(0, 5).map((p) => (
-          <AvatarBadge key={p.id} id={p.id} name={p.name} size="sm" />
+          <AvatarBadge key={p.id} id={p.id} name={p.name} size="sm" className="ring-2 ring-background" />
         ))}
         {group.people.length === 0 && (
-          <span className="text-sm text-text-muted">No members yet</span>
+          <span className="text-sm text-muted-foreground">No members yet</span>
         )}
         {group.people.length > 5 && (
-          <span className="text-xs font-semibold text-text-muted">
+          <span className="ml-3 text-xs font-semibold text-muted-foreground">
             +{group.people.length - 5}
           </span>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-text-muted">
-          {settledUp ? "All settled up" : `${pending} payment${pending === 1 ? "" : "s"} pending`}
-        </p>
-        {settledUp && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm(`Delete "${group.name}"? This can't be undone.`)) onDelete();
-            }}
-            className="text-sm font-semibold text-you-owe hover:underline"
-          >
-            Delete
-          </button>
-        )}
-      </div>
+      <Badge variant={settledUp ? "outline" : "secondary"} className="w-fit">
+        {settledUp ? "All settled up" : `${pending} payment${pending === 1 ? "" : "s"} pending`}
+      </Badge>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete &quot;{group.name}&quot;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This can&apos;t be undone. All members, expenses, and settlement history in this
+              group will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={onDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

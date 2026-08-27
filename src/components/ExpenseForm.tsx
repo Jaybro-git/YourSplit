@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { Reorder, useDragControls } from "motion/react";
+import { GripVertical } from "lucide-react";
 import type { Expense, Person, SplitMethod } from "@/types";
 import { formatCurrency, splitEqually, sumSplits, toCents } from "@/lib/money";
 import { generateId, timestampNow, toDateInputValue, combineDateAndTime } from "@/lib/id";
 import { AvatarBadge } from "./AvatarBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 function emptyExactAmounts(participantIds: string[]): Record<string, string> {
   return Object.fromEntries(participantIds.map((id) => [id, ""]));
@@ -25,27 +35,47 @@ function initialOrder(people: Person[], editingExpense: Expense | null): string[
   return [...base, ...rest];
 }
 
-const GripIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    width="14"
-    height="14"
-    fill="currentColor"
-    aria-hidden="true"
-    className="flex-shrink-0 text-text-muted"
-  >
-    <circle cx="5" cy="3" r="1.3" />
-    <circle cx="11" cy="3" r="1.3" />
-    <circle cx="5" cy="8" r="1.3" />
-    <circle cx="11" cy="8" r="1.3" />
-    <circle cx="5" cy="13" r="1.3" />
-    <circle cx="11" cy="13" r="1.3" />
-  </svg>
-);
+// Drag is scoped to the grip handle (dragListener={false} + manual
+// controls.start) rather than the whole row, so tapping the checkbox/label
+// still just toggles — it doesn't fight the drag gesture. Motion's Reorder
+// handles both mouse and touch input, unlike the HTML5 drag-and-drop API
+// (which native mobile browsers never fire drag events for at all).
+function ParticipantRow({
+  person,
+  checked,
+  onToggle,
+}: {
+  person: Person;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  const controls = useDragControls();
 
-// Rendered with a `key` in GroupDetail that changes between "new" and each
-// expense id, so switching targets remounts this form instead of syncing
-// via an effect.
+  return (
+    <Reorder.Item
+      value={person.id}
+      dragListener={false}
+      dragControls={controls}
+      className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+    >
+      <span
+        onPointerDown={(e) => controls.start(e)}
+        className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+      >
+        <GripVertical className="size-3.5" />
+      </span>
+      <label className="flex flex-1 cursor-pointer items-center gap-2">
+        <Checkbox checked={checked} onCheckedChange={onToggle} />
+        <AvatarBadge id={person.id} name={person.name} size="sm" />
+        {person.name}
+      </label>
+    </Reorder.Item>
+  );
+}
+
+// Rendered with a `key` in ExpenseFormDialog that changes between "new" and
+// each expense id, so switching targets remounts this form instead of
+// syncing via an effect.
 export function ExpenseForm({
   people,
   editingExpense,
@@ -73,10 +103,7 @@ export function ExpenseForm({
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(editingExpense?.participantIds ?? people.map((p) => p.id))
   );
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [splitMethod, setSplitMethod] = useState<SplitMethod>(
-    editingExpense?.splitMethod ?? "equal"
-  );
+  const [splitMethod, setSplitMethod] = useState<SplitMethod>(editingExpense?.splitMethod ?? "equal");
   const [exactAmounts, setExactAmounts] = useState<Record<string, string>>(
     initialExactAmounts(editingExpense)
   );
@@ -91,17 +118,6 @@ export function ExpenseForm({
       else next.add(personId);
       return next;
     });
-  }
-
-  function handleDrop(targetIndex: number) {
-    setOrder((prev) => {
-      if (dragIndex === null || dragIndex === targetIndex) return prev;
-      const next = [...prev];
-      const [moved] = next.splice(dragIndex, 1);
-      next.splice(targetIndex, 0, moved);
-      return next;
-    });
-    setDragIndex(null);
   }
 
   const equalPreview =
@@ -122,12 +138,11 @@ export function ExpenseForm({
     totalCents > 0 &&
     (splitMethod === "equal" || exactRemaining === 0);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
 
-    const splits =
-      splitMethod === "equal" ? splitEqually(totalCents, participantIds) : exactSplits;
+    const splits = splitMethod === "equal" ? splitEqually(totalCents, participantIds) : exactSplits;
 
     const expense: Expense = {
       id: editingExpense?.id ?? generateId(),
@@ -145,143 +160,128 @@ export function ExpenseForm({
 
   if (people.length === 0) {
     return (
-      <p className="text-sm text-text-muted">
+      <p className="text-sm text-muted-foreground">
         Add at least one member before logging an expense.
       </p>
     );
   }
 
-  const fieldClass =
-    "w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-base outline-none focus:border-accent";
-
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div>
-        <label className="mb-1.5 block text-sm font-semibold text-text">Description</label>
-        <input
-          type="text"
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="expense-description">Description</Label>
+        <Input
+          id="expense-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="e.g. Dinner, Uber, Groceries"
-          className={fieldClass}
         />
       </div>
 
       <div className="flex gap-3">
-        <div className="flex-1">
-          <label className="mb-1.5 block text-sm font-semibold text-text">Total Amount (LKR)</label>
-          <input
+        <div className="flex flex-1 flex-col gap-1.5">
+          <Label htmlFor="expense-amount">Total amount (LKR)</Label>
+          <Input
+            id="expense-amount"
             type="number"
             min="0"
             step="0.01"
             value={amountRs}
             onChange={(e) => setAmountRs(e.target.value)}
             placeholder="0.00"
-            className={fieldClass}
           />
         </div>
-        <div className="flex-1">
-          <label className="mb-1.5 block text-sm font-semibold text-text">Date</label>
-          <input
+        <div className="flex flex-1 flex-col gap-1.5">
+          <Label htmlFor="expense-date">Date</Label>
+          <Input
+            id="expense-date"
             type="date"
             value={dateStr}
             onChange={(e) => setDateStr(e.target.value)}
-            className={fieldClass}
           />
         </div>
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-sm font-semibold text-text">Paid by</label>
-        <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)} className={fieldClass}>
-          {people.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="expense-paidby">Paid by</Label>
+        <Select value={paidBy} onValueChange={setPaidBy}>
+          <SelectTrigger id="expense-paidby" className="w-full">
+            <SelectValue placeholder="Select who paid" />
+          </SelectTrigger>
+          <SelectContent>
+            {people.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div>
-        <div className="mb-1.5 flex items-center gap-1.5">
-          <label className="block text-sm font-semibold text-text">Split between</label>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <Label>Split between</Label>
           <span
             tabIndex={0}
             title="If the total can't be split perfectly evenly, the extra cent(s) go to the first person in this list. Drag rows by the handle to reorder."
-            className="flex h-4 w-4 flex-shrink-0 cursor-help items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted"
+            className="flex size-4 shrink-0 cursor-help items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground"
           >
             i
           </span>
         </div>
-        <div className="flex flex-col gap-1.5">
-          {order.map((personId, index) => {
+        <Reorder.Group
+          axis="y"
+          values={order}
+          onReorder={setOrder}
+          className="flex flex-col gap-1.5"
+        >
+          {order.map((personId) => {
             const p = people.find((person) => person.id === personId);
             if (!p) return null;
             return (
-              <div
+              <ParticipantRow
                 key={p.id}
-                draggable
-                onDragStart={() => setDragIndex(index)}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={() => handleDrop(index)}
-                onDragEnd={() => setDragIndex(null)}
-                className={`flex items-center gap-2 rounded-2xl border border-border px-4 py-2.5 text-base ${
-                  dragIndex === index ? "opacity-40" : ""
-                }`}
-              >
-                <span className="cursor-grab active:cursor-grabbing">
-                  <GripIcon />
-                </span>
-                <label className="flex flex-1 items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(p.id)}
-                    onChange={() => toggleParticipant(p.id)}
-                    className="accent-accent"
-                  />
-                  <AvatarBadge id={p.id} name={p.name} size="sm" />
-                  {p.name}
-                </label>
-              </div>
+                person={p}
+                checked={selected.has(p.id)}
+                onToggle={() => toggleParticipant(p.id)}
+              />
             );
           })}
-        </div>
+        </Reorder.Group>
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-sm font-semibold text-text">Split method</label>
-        <div className="flex gap-1 rounded-2xl bg-surface-muted p-1">
-          {(["equal", "exact"] as SplitMethod[]).map((method) => (
-            <button
-              key={method}
-              type="button"
-              onClick={() => setSplitMethod(method)}
-              className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold capitalize transition-colors ${
-                splitMethod === method
-                  ? "bg-surface text-text shadow-sm"
-                  : "text-text-muted"
-              }`}
-            >
-              {method === "equal" ? "Equal" : "Exact Amount"}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>Split method</Label>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          value={splitMethod}
+          onValueChange={(v) => v && setSplitMethod(v as SplitMethod)}
+          className="w-full"
+        >
+          <ToggleGroupItem value="equal" className="flex-1">
+            Equal
+          </ToggleGroupItem>
+          <ToggleGroupItem value="exact" className="flex-1">
+            Exact amount
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       {splitMethod === "equal" && participantIds.length > 0 && (
-        <ul className="flex flex-col gap-1.5 rounded-2xl border border-border p-4 text-sm">
+        <ul className="flex flex-col gap-1.5 rounded-lg border border-border p-3 text-sm">
           {equalPreview.map((split) => {
             const person = people.find((p) => p.id === split.personId);
             const minAmount = Math.min(...equalPreview.map((s) => s.amountCents));
             const getsExtraCent = split.amountCents > minAmount;
             return (
-              <li key={split.personId} className="flex justify-between">
-                <span>
+              <li key={split.personId} className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
                   {person?.name}
                   {getsExtraCent && (
-                    <span className="ml-1.5 text-xs font-medium text-text-muted">
-                      (+1¢)
-                    </span>
+                    <Badge variant="outline" className="text-[10px]">
+                      +1¢
+                    </Badge>
                   )}
                 </span>
                 <span className="tabular-nums">{formatCurrency(split.amountCents)}</span>
@@ -292,13 +292,13 @@ export function ExpenseForm({
       )}
 
       {splitMethod === "exact" && participantIds.length > 0 && (
-        <div className="flex flex-col gap-2.5 rounded-2xl border border-border p-4">
+        <div className="flex flex-col gap-2.5 rounded-lg border border-border p-3">
           {participantIds.map((personId) => {
             const person = people.find((p) => p.id === personId);
             return (
               <div key={personId} className="flex items-center justify-between gap-3">
-                <span className="text-base">{person?.name}</span>
-                <input
+                <span className="text-sm">{person?.name}</span>
+                <Input
                   type="number"
                   min="0"
                   step="0.01"
@@ -307,15 +307,16 @@ export function ExpenseForm({
                     setExactAmounts((prev) => ({ ...prev, [personId]: e.target.value }))
                   }
                   placeholder="0.00"
-                  className="w-28 rounded-xl border border-border bg-surface px-2.5 py-1.5 text-right text-sm outline-none focus:border-accent"
+                  className="w-28 text-right"
                 />
               </div>
             );
           })}
           <div
-            className={`mt-1 text-right text-sm font-medium ${
-              exactRemaining === 0 ? "text-owed-to-you" : "text-you-owe"
-            }`}
+            className={cn(
+              "mt-1 text-right text-sm font-medium",
+              exactRemaining === 0 ? "text-positive" : "text-negative"
+            )}
           >
             {exactRemaining === 0
               ? "Splits match the total"
@@ -325,20 +326,12 @@ export function ExpenseForm({
       )}
 
       <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="rounded-2xl bg-accent px-5 py-2.5 text-base font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
-        >
+        <Button type="submit" disabled={!canSubmit}>
           {editingExpense ? "Save changes" : "Add expense"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-2xl border border-border px-5 py-2.5 text-base font-medium hover:bg-surface-muted"
-        >
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );

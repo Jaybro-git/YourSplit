@@ -1,25 +1,39 @@
-import { solidColorForId } from "@/lib/palette";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { solidColorForId, softColorForId } from "@/lib/palette";
+import { cn } from "@/lib/utils";
+
+const avatarBadgeVariants = cva("shrink-0", {
+  variants: {
+    size: {
+      sm: "size-6 text-xs",
+      md: "size-9 text-sm",
+      lg: "size-11 text-base",
+    },
+  },
+  defaultVariants: { size: "md" },
+});
 
 export function AvatarBadge({
   id,
   name,
   size = "md",
+  className,
 }: {
   id: string;
   name: string;
-  size?: "sm" | "md" | "lg";
-}) {
-  const dimensions =
-    size === "sm" ? "h-6 w-6 text-xs" : size === "lg" ? "h-11 w-11 text-base" : "h-9 w-9 text-sm";
+  className?: string;
+} & VariantProps<typeof avatarBadgeVariants>) {
   const initial = name.trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <span
-      className={`inline-flex ${dimensions} flex-shrink-0 items-center justify-center rounded-full font-semibold text-white ${solidColorForId(
-        id
-      )}`}
-    >
-      {initial}
-    </span>
+    <Avatar className={cn(avatarBadgeVariants({ size }), className)}>
+      <AvatarFallback
+        className="font-semibold"
+        style={{ backgroundColor: softColorForId(id), color: solidColorForId(id) }}
+      >
+        {initial}
+      </AvatarFallback>
+    </Avatar>
   );
 }
