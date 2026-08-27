@@ -56,7 +56,7 @@ export function ResponsiveDialog({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className={cn("max-h-[90vh]", contentClassName)}>
+      <DrawerContent className={cn("max-h-[90dvh]", contentClassName)}>
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
           {description && <DrawerDescription>{description}</DrawerDescription>}
