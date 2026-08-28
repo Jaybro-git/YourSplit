@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { LogOut, MoreHorizontal, Trash2 } from "lucide-react";
 import type { Group } from "@/types";
 import { computeBalances } from "@/lib/balances";
 import { simplifyDebts } from "@/lib/settleUp";
 import { lightCardColorForId } from "@/lib/palette";
+import { useAuth } from "@/store/auth";
 import { AvatarBadge } from "./AvatarBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,12 +28,28 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export function GroupCard({ group, onDelete }: { group: Group; onDelete: () => void }) {
+export function GroupCard({
+  group,
+  onDelete,
+  onLeave,
+}: {
+  group: Group;
+  onDelete: () => void;
+  onLeave: () => void;
+}) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const { user } = useAuth();
   const balances = computeBalances(group.people, group.expenses, group.settlements);
   const pending = simplifyDebts(balances).length;
   const settledUp = pending === 0;
   const { bg, border } = lightCardColorForId(group.id);
+
+  // Mirrors GroupDetail: only the owner may delete (that's what the RLS
+  // delete policy allows), and leaving needs your own balance clear.
+  const isOwner = user?.id === group.ownerId;
+  const currentPersonId = group.people.find((p) => p.userId && p.userId === user?.id)?.id ?? null;
+  const canLeave = currentPersonId !== null && (balances[currentPersonId] ?? 0) === 0;
 
   return (
     <div
@@ -53,20 +70,27 @@ export function GroupCard({ group, onDelete }: { group: Group; onDelete: () => v
           <span className="text-xs font-medium whitespace-nowrap text-muted-foreground">
             {group.expenses.length} {group.expenses.length === 1 ? "expense" : "expenses"}
           </span>
-          {settledUp && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-sm" aria-label="Group actions">
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" aria-label="Group actions">
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem disabled={!canLeave} onSelect={() => setLeaveOpen(true)}>
+                <LogOut className="size-4" /> Leave group
+              </DropdownMenuItem>
+              {isOwner && (
+                <DropdownMenuItem
+                  variant="destructive"
+                  disabled={!settledUp}
+                  onSelect={() => setConfirmOpen(true)}
+                >
                   <Trash2 className="size-4" /> Delete group
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -102,6 +126,23 @@ export function GroupCard({ group, onDelete }: { group: Group; onDelete: () => v
             <AlertDialogAction variant="destructive" onClick={onDelete}>
               Delete
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave &quot;{group.name}&quot;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The group stays active for everyone else, and any expenses you were part of are
+              kept so their balances still add up — your name remains on them. You&apos;ll need a
+              new invite link to rejoin.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onLeave}>Leave</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

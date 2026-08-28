@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, MoreHorizontal, Printer, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft, LogOut, MoreHorizontal, Printer, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,16 +25,21 @@ export function GroupHeader({
   name,
   settledUp,
   isOwner,
+  canLeave,
   onDeleteGroup,
+  onLeaveGroup,
   onInvite,
 }: {
   name: string;
   settledUp: boolean;
   isOwner: boolean;
+  canLeave: boolean;
   onDeleteGroup: () => void;
+  onLeaveGroup: () => void;
   onInvite: () => void;
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -53,14 +58,17 @@ export function GroupHeader({
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.print()}>
           <Printer className="size-4" /> Export PDF
         </Button>
-        {isOwner && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Group actions">
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" aria-label="Group actions">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled={!canLeave} onSelect={() => setLeaveOpen(true)}>
+              <LogOut className="size-4" /> Leave group
+            </DropdownMenuItem>
+            {isOwner && (
               <DropdownMenuItem
                 variant="destructive"
                 disabled={!settledUp}
@@ -68,9 +76,9 @@ export function GroupHeader({
               >
                 <Trash2 className="size-4" /> Delete group
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
@@ -87,6 +95,23 @@ export function GroupHeader({
             <AlertDialogAction variant="destructive" onClick={onDeleteGroup}>
               Delete
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave &quot;{name}&quot;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The group stays active for everyone else, and any expenses you were part of are
+              kept so their balances still add up — your name remains on them. You&apos;ll need a
+              new invite link to rejoin.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onLeaveGroup}>Leave</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

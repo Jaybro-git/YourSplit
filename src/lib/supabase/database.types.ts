@@ -127,6 +127,7 @@ export type Database = {
     Functions: {
       is_group_member: { Args: { gid: string }; Returns: boolean };
       ensure_profile: { Args: Record<PropertyKey, never>; Returns: undefined };
+      leave_group: { Args: { gid: string }; Returns: undefined };
       create_group: {
         Args: { group_name: string };
         Returns: Database["public"]["Tables"]["groups"]["Row"];

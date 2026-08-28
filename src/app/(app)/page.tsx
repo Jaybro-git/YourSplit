@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const PAGE_PAD = "px-4 sm:px-6 lg:px-8";
 
 export default function GroupsPage() {
-  const { groups, hydrated, deleteGroup, restoreGroup } = useGroups();
+  const { groups, hydrated, deleteGroup, leaveGroup, restoreGroup } = useGroups();
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
@@ -63,6 +63,11 @@ export default function GroupsPage() {
                     toast(`"${group.name}" deleted`, {
                       action: { label: "Undo", onClick: () => restoreGroup(group) },
                     });
+                  }}
+                  onLeave={() => {
+                    // No Undo here: rejoining needs a fresh invite link.
+                    leaveGroup(group.id);
+                    toast(`You left "${group.name}"`);
                   }}
                 />
               ))}

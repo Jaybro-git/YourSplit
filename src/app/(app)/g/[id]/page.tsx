@@ -18,6 +18,7 @@ export default function GroupPage({ params }: PageProps<"/g/[id]">) {
     groups,
     hydrated,
     deleteGroup,
+    leaveGroup,
     restoreGroup,
     addMember,
     removeMember,
@@ -72,6 +73,14 @@ export default function GroupPage({ params }: PageProps<"/g/[id]">) {
             },
           },
         });
+        router.push("/");
+      }}
+      onLeaveGroup={() => {
+        // No undo: rejoining needs a fresh invite, so offering one would be
+        // a lie. leaveGroup surfaces its own error toast on failure.
+        const left = group;
+        leaveGroup(left.id);
+        toast(`You left "${left.name}"`);
         router.push("/");
       }}
       onAddMember={(name) => addMember(group.id, name)}

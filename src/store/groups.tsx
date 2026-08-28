@@ -25,6 +25,7 @@ type GroupsContextValue = {
   addGroup: (name: string) => Promise<string>;
   restoreGroup: (group: Group) => Promise<void>;
   deleteGroup: (id: string) => Promise<void>;
+  leaveGroup: (id: string) => Promise<void>;
   addMember: (groupId: string, name: string) => Promise<void>;
   removeMember: (groupId: string, personId: string) => Promise<void>;
   saveExpense: (groupId: string, expense: Expense) => Promise<void>;
@@ -203,6 +204,23 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
     if (error) rollback(snapshot, "Couldn't delete group", error);
   }
 
+  // Leaving is not "delete my membership row" — see leave_group in
+  // supabase/migrations/0006. There's no undo toast for this one: rejoining
+  // requires a fresh invite, so it isn't locally reversible the way a delete
+  // is.
+  async function leaveGroup(id: string) {
+    const snapshot = groupsRef.current;
+    setGroups((prev) => prev.filter((g) => g.id !== id));
+    const { error } = await supabase.rpc("leave_group", { gid: id });
+    if (error) {
+      const message =
+        error.message === "last_member_must_delete"
+          ? "You're the only member with an account — delete the group instead"
+          : "Couldn't leave group";
+      rollback(snapshot, message, error);
+    }
+  }
+
   async function addMember(groupId: string, name: string) {
     const snapshot = groupsRef.current;
     const { data, error } = await supabase
@@ -318,6 +336,7 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
     addGroup,
     restoreGroup,
     deleteGroup,
+    leaveGroup,
     addMember,
     removeMember,
     saveExpense,

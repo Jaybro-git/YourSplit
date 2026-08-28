@@ -27,6 +27,7 @@ type PanelTab = "settle" | "activity" | "people";
 export function GroupDetail({
   group,
   onDeleteGroup,
+  onLeaveGroup,
   onAddMember,
   onRemoveMember,
   onSaveExpense,
@@ -37,6 +38,7 @@ export function GroupDetail({
 }: {
   group: Group;
   onDeleteGroup: () => void;
+  onLeaveGroup: () => void;
   onAddMember: (name: string) => void;
   onRemoveMember: (id: string) => void;
   onSaveExpense: (expense: Expense) => void;
@@ -67,6 +69,10 @@ export function GroupDetail({
   );
   const transactions = useMemo(() => simplifyDebts(balances), [balances]);
   const settledUp = transactions.length === 0;
+  // Leaving only requires *your* books to be clear, not the whole group's —
+  // others can still owe each other. Deleting still needs the group settled,
+  // since that destroys everyone's data.
+  const canLeave = currentPersonId !== null && (balances[currentPersonId] ?? 0) === 0;
 
   function handleSettle(transaction: Transaction, amountCents: number) {
     onAddSettlement(transaction.from, transaction.to, amountCents);
@@ -100,7 +106,9 @@ export function GroupDetail({
           name={group.name}
           settledUp={settledUp}
           isOwner={isOwner}
+          canLeave={canLeave}
           onDeleteGroup={onDeleteGroup}
+          onLeaveGroup={onLeaveGroup}
           onInvite={() => setInviteOpen(true)}
         />
         {showStats && (
