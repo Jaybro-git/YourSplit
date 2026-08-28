@@ -72,7 +72,7 @@ export function GroupCard({ group, onDelete }: { group: Group; onDelete: () => v
 
       <div className="flex items-center -space-x-2">
         {group.people.slice(0, 5).map((p) => (
-          <AvatarBadge key={p.id} id={p.id} name={p.name} size="sm" className="ring-2 ring-background" />
+          <AvatarBadge key={p.id} id={p.id} name={p.name} avatarUrl={p.avatarUrl} size="sm" className="ring-2 ring-background" />
         ))}
         {group.people.length === 0 && (
           <span className="text-sm text-muted-foreground">No members yet</span>

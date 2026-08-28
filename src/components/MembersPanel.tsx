@@ -65,9 +65,20 @@ export function MembersPanel({
                 className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
               >
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <AvatarBadge id={person.id} name={person.name} size="sm" />
+                  <AvatarBadge id={person.id} name={person.name} avatarUrl={person.avatarUrl} size="sm" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{person.name}</p>
+                    {/* A member is a "ghost" until an account is linked to it —
+                        either the group creator, or someone who accepted an
+                        invite and claimed this row. Only linked members have a
+                        profile (and therefore an email) to show. */}
+                    {person.userId ? (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {person.email ?? "Signed-in member"}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Ghost · no account yet</p>
+                    )}
                     <p
                       className={cn(
                         "text-xs font-medium",

@@ -1,8 +1,22 @@
-# Splits
+# YourSplit
 
-A local-only, no-auth "Expense Splitter" for groups: log shared expenses, see net
-balances, and get a minimal set of payments to settle up. All state lives in the
-browser via `localStorage`; there is no backend and no database.
+An "Expense Splitter" for groups: log shared expenses, see net balances, and get
+a minimal set of payments to settle up. Started as a local-only, no-auth take-home
+build (see below); now backed by Supabase Postgres with Google sign-in, so groups
+can be shared with other people via an invite link instead of living in one
+browser's `localStorage`.
+
+## Setup (Supabase + Google auth)
+
+1. Create a Supabase project and enable the Google provider under
+   **Authentication → Providers** (needs a Google Cloud OAuth client — see
+   `.env.example` for the two values this app needs).
+2. Run the files in `supabase/migrations/` in order in the Supabase SQL Editor.
+   `0001_init.sql` creates the schema, RLS policies, and the `accept_invite` /
+   `claim_ghost_member` / `get_invite_preview` RPCs the invite flow depends on;
+   `0002_fix_group_owner_policies.sql` adds the `create_group` RPC and lets a
+   group's owner see it before they're a member row.
+3. Copy `.env.example` to `.env.local` and fill in your project's URL + anon key.
 
 ## The prompt
 
@@ -229,30 +243,56 @@ never crashes newer code.
 
 ```
 src/
-  types/index.ts        Person, Group, Expense, ExpenseSplit, Settlement, Transaction
-  hooks/useLocalStorage.ts
+  types/index.ts          Person, Group, Expense, ExpenseSplit, Settlement, Transaction
   lib/
-    money.ts             toCents, formatCurrency, splitEqually, sumSplits
-    balances.ts          computeBalances (expenses + settlements)
-    settleUp.ts          simplifyDebts (greedy)
-    id.ts                generateId, timestampNow
+    money.ts              toCents, formatCurrency, splitEqually, sumSplits
+    balances.ts           computeBalances (expenses + settlements) — pure, DB-agnostic
+    settleUp.ts           simplifyDebts (greedy)
+    id.ts                 generateId, timestampNow
+    supabase/
+      client.ts           browser Supabase client
+      server.ts            server-component/route-handler Supabase client
+      proxy.ts             session refresh + auth redirect, used by ../../../proxy.ts
+      mappers.ts           DB row shapes -> Person/Group/Expense/Settlement
+      database.types.ts    hand-written types matching supabase/migrations/0001_init.sql
+  store/
+    auth.tsx              AuthProvider/useAuth — Supabase session + profile
+    groups.tsx             GroupsProvider/useGroups — Postgres-backed, optimistic mutations
   components/
     GroupCard.tsx, GroupDetail.tsx    home grid card / group screen
     SettleUpStrip.tsx, SettleUpModal.tsx   debt strip + record-a-payment modal
     ActivityFeed.tsx                  color-coded expense + settlement feed
-    MembersPanel.tsx                  members modal (add/remove/balances)
+    MembersPanel.tsx                  members panel (add/remove/balances)
+    InviteDialog.tsx, JoinGroupCard.tsx    generate/share invite link, accept + claim-a-ghost
     ExpenseForm.tsx                   add/edit an expense
-    Modal.tsx, NameEntryModal.tsx     shared modal primitives
     AvatarBadge.tsx
-  app/page.tsx            orchestrator: groups list <-> group detail
+  app/
+    login/page.tsx          Google sign-in
+    auth/callback/route.ts  OAuth code exchange
+    join/[token]/page.tsx   invite acceptance
+    (app)/page.tsx          groups list
+    (app)/g/[id]/page.tsx   group detail
+  proxy.ts                session refresh + route protection (Next 16's renamed middleware.ts)
+supabase/migrations/0001_init.sql   schema, RLS policies, RPCs
 ```
+
+`src/proxy.ts` must sit next to `src/app/`, not at the repo root. Because this
+project uses a `src/` directory, a root-level `proxy.ts` is silently ignored —
+no warning, no build error, protected routes just serve as though you were
+signed in.
 
 ## Running it
 
 ```bash
 npm install
 npm run dev     # http://localhost:3000
-npm run test    # vitest: money/balances/settle-up algorithms
+npm run test    # vitest: money/balances/settle-up algorithms — pure, no env needed
 npm run build   # production build + typecheck
 npm run lint    # eslint
 ```
+
+`dev` and `build` both need `.env.local` (see Setup above). Without it the build
+fails while prerendering with `@supabase/ssr: Your project's URL and API key are
+required to create a Supabase client!` — the root layout's providers construct a
+client, so this surfaces on a static page like `/_not-found` rather than
+anywhere obviously auth-related.

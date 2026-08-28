@@ -17,18 +17,26 @@ export function CreateGroupDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [name, setName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { addGroup } = useGroups();
   const router = useRouter();
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed) return;
-    const id = addGroup(trimmed);
-    toast.success(`"${trimmed}" created`);
-    setName("");
-    onOpenChange(false);
-    router.push(`/g/${id}`);
+    if (!trimmed || submitting) return;
+    setSubmitting(true);
+    try {
+      const id = await addGroup(trimmed);
+      toast.success(`"${trimmed}" created`);
+      setName("");
+      onOpenChange(false);
+      router.push(`/g/${id}`);
+    } catch {
+      // addGroup already surfaces a toast.error on failure.
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -49,8 +57,8 @@ export function CreateGroupDialog({
             placeholder="e.g. Goa Trip, Flatmates"
           />
         </div>
-        <Button type="submit" disabled={!name.trim()}>
-          Create group
+        <Button type="submit" disabled={!name.trim() || submitting}>
+          {submitting ? "Creating…" : "Create group"}
         </Button>
       </form>
     </ResponsiveDialog>

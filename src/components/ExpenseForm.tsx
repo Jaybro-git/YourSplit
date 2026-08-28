@@ -66,7 +66,7 @@ function ParticipantRow({
       </span>
       <label className="flex flex-1 cursor-pointer items-center gap-2">
         <Checkbox checked={checked} onCheckedChange={onToggle} />
-        <AvatarBadge id={person.id} name={person.name} size="sm" />
+        <AvatarBadge id={person.id} name={person.name} avatarUrl={person.avatarUrl} size="sm" />
         {person.name}
       </label>
     </Reorder.Item>

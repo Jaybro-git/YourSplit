@@ -3,12 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Menu, Plus, Wallet } from "lucide-react";
+import { LogOut, Menu, Plus, Wallet } from "lucide-react";
 import { useGroups } from "@/store/groups";
+import { useAuth } from "@/store/auth";
 import { AvatarBadge } from "@/components/AvatarBadge";
 import { CreateGroupDialog } from "@/components/CreateGroupDialog";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -19,6 +28,33 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+
+function UserMenu() {
+  const { user, profile, signOut } = useAuth();
+  if (!user) return null;
+
+  const name = profile?.displayName ?? user.email ?? "Account";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-1 text-left hover:bg-sidebar-accent">
+          <AvatarBadge id={user.id} name={name} avatarUrl={profile?.avatarUrl} size="sm" />
+          <span className="min-w-0 truncate text-sm font-medium">{name}</span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
+          {user.email}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => signOut()}>
+          <LogOut className="size-4" /> Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { groups, hydrated } = useGroups();
@@ -75,8 +111,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         )}
       </div>
 
-      <div className="flex items-center justify-between border-t border-sidebar-border pt-3">
-        <span className="text-xs text-muted-foreground">Theme</span>
+      <div className="flex items-center justify-between gap-2 border-t border-sidebar-border pt-3">
+        <UserMenu />
         <ModeToggle />
       </div>
 

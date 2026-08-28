@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, MoreHorizontal, Printer, Trash2 } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Printer, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,11 +24,15 @@ import {
 export function GroupHeader({
   name,
   settledUp,
+  isOwner,
   onDeleteGroup,
+  onInvite,
 }: {
   name: string;
   settledUp: boolean;
+  isOwner: boolean;
   onDeleteGroup: () => void;
+  onInvite: () => void;
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -43,25 +47,30 @@ export function GroupHeader({
         <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">{name}</h1>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={onInvite}>
+          <UserPlus className="size-4" /> Invite
+        </Button>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.print()}>
           <Printer className="size-4" /> Export PDF
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Group actions">
-              <MoreHorizontal className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              variant="destructive"
-              disabled={!settledUp}
-              onSelect={() => setConfirmOpen(true)}
-            >
-              <Trash2 className="size-4" /> Delete group
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {isOwner && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="Group actions">
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={!settledUp}
+                onSelect={() => setConfirmOpen(true)}
+              >
+                <Trash2 className="size-4" /> Delete group
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>

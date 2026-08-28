@@ -6,12 +6,14 @@ import { Plus, UserPlus } from "lucide-react";
 import type { Expense, Group, Settlement, Transaction } from "@/types";
 import { computeBalances } from "@/lib/balances";
 import { simplifyDebts } from "@/lib/settleUp";
+import { useAuth } from "@/store/auth";
 import { GroupHeader } from "./GroupHeader";
 import { BalanceOverview } from "./BalanceOverview";
 import { SettleUpStrip } from "./SettleUpStrip";
 import { ActivityFeed } from "./ActivityFeed";
 import { ExpenseFormDialog } from "./ExpenseFormDialog";
 import { AddMemberDialog } from "./AddMemberDialog";
+import { InviteDialog } from "./InviteDialog";
 import { MembersPanel } from "./MembersPanel";
 import { GroupSummaryPrint } from "./GroupSummaryPrint";
 import { Button } from "@/components/ui/button";
@@ -42,9 +44,12 @@ export function GroupDetail({
   onDeleteSettlement: (id: string) => void;
   onRestoreSettlement: (settlement: Settlement) => void;
 }) {
+  const { user } = useAuth();
+  const isOwner = user?.id === group.ownerId;
   const [activeTab, setActiveTab] = useState<PanelTab>("settle");
   const [expenseDialog, setExpenseDialog] = useState<"closed" | "new" | Expense>("closed");
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const balances = useMemo(
     () => computeBalances(group.people, group.expenses, group.settlements),
@@ -81,7 +86,13 @@ export function GroupDetail({
       <div
         className={`flex shrink-0 flex-col gap-4 border-b border-border bg-background pt-6 pb-4 ${PANEL_PAD} print:static print:hidden`}
       >
-        <GroupHeader name={group.name} settledUp={settledUp} onDeleteGroup={onDeleteGroup} />
+        <GroupHeader
+          name={group.name}
+          settledUp={settledUp}
+          isOwner={isOwner}
+          onDeleteGroup={onDeleteGroup}
+          onInvite={() => setInviteOpen(true)}
+        />
         <BalanceOverview expenses={group.expenses} transactions={transactions} />
         <TabsList className="w-full sm:w-fit">
           <TabsTrigger value="settle">Settle up</TabsTrigger>
@@ -184,6 +195,7 @@ export function GroupDetail({
         }}
       />
       <AddMemberDialog open={addMemberOpen} onOpenChange={setAddMemberOpen} onAdd={onAddMember} />
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} groupId={group.id} />
 
       <GroupSummaryPrint group={group} balances={balances} transactions={transactions} />
     </Tabs>

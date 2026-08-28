@@ -3,6 +3,7 @@ import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/store/auth";
 import { GroupsProvider } from "@/store/groups";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -11,7 +12,7 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "YourSplit",
-  description: "Split group expenses and settle up, in one browser session.",
+  description: "Split group expenses and settle up with friends.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -23,9 +24,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <TooltipProvider>
-            <GroupsProvider>{children}</GroupsProvider>
-          </TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <GroupsProvider>{children}</GroupsProvider>
+            </TooltipProvider>
+          </AuthProvider>
           <Toaster />
         </ThemeProvider>
       </body>

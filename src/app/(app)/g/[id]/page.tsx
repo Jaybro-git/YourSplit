@@ -46,7 +46,7 @@ export default function GroupPage({ params }: PageProps<"/g/[id]">) {
         <EmptyState
           icon={FolderX}
           title="Group not found"
-          description="This group doesn't exist, or was deleted on this device."
+          description="This group doesn't exist, was deleted, or you don't have access to it."
           action={
             <Button asChild>
               <Link href="/">Back to groups</Link>

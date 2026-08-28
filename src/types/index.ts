@@ -1,6 +1,12 @@
 export type Person = {
   id: string;
   name: string;
+  // Present once a real Google account is linked to this member (via invite
+  // acceptance or being the group's creator); absent for "ghost" members
+  // that exist as a name only. See src/store/groups.tsx.
+  userId?: string | null;
+  avatarUrl?: string | null;
+  email?: string | null;
 };
 
 export type SplitMethod = "equal" | "exact";
@@ -38,6 +44,7 @@ export type Settlement = {
 export type Group = {
   id: string;
   name: string;
+  ownerId: string;
   people: Person[];
   expenses: Expense[];
   settlements: Settlement[];
