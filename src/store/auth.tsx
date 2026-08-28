@@ -31,6 +31,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
 
     async function loadProfile(currentUser: User) {
+      // Creates the profiles row on first sign-in if it's missing. The
+      // auth.users trigger can't be relied on (attaching it to Supabase's
+      // auth schema is privilege-dependent), and every FK into profiles —
+      // groups.owner_id, group_members.user_id, group_invites.created_by —
+      // breaks without it. Idempotent, so running it on each load is fine.
+      await supabase.rpc("ensure_profile");
+
       const { data } = await supabase
         .from("profiles")
         .select("id, email, display_name, avatar_url")

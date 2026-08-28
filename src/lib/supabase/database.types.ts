@@ -126,6 +126,7 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       is_group_member: { Args: { gid: string }; Returns: boolean };
+      ensure_profile: { Args: Record<PropertyKey, never>; Returns: undefined };
       create_group: {
         Args: { group_name: string };
         Returns: Database["public"]["Tables"]["groups"]["Row"];
