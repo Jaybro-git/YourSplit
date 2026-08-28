@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Plus, UserPlus } from "lucide-react";
 import type { Expense, Group, Settlement, Transaction } from "@/types";
 import { computeBalances } from "@/lib/balances";
 import { simplifyDebts } from "@/lib/settleUp";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useAuth } from "@/store/auth";
 import { GroupHeader } from "./GroupHeader";
 import { BalanceOverview } from "./BalanceOverview";
@@ -46,6 +47,15 @@ export function GroupDetail({
 }) {
   const { user } = useAuth();
   const isOwner = user?.id === group.ownerId;
+  // The group_members row linked to the signed-in account — "you" within this
+  // group. Everything else keys off member ids, so this is the only place the
+  // account identity has to be translated into a Person.
+  const currentPersonId = useMemo(
+    () => group.people.find((p) => p.userId && p.userId === user?.id)?.id ?? null,
+    [group.people, user?.id]
+  );
+  // Persisted so the choice survives navigation and reloads.
+  const [showStats, setShowStats] = useLocalStorage<boolean>("splitter:showStats", true);
   const [activeTab, setActiveTab] = useState<PanelTab>("settle");
   const [expenseDialog, setExpenseDialog] = useState<"closed" | "new" | Expense>("closed");
   const [addMemberOpen, setAddMemberOpen] = useState(false);
@@ -93,12 +103,34 @@ export function GroupDetail({
           onDeleteGroup={onDeleteGroup}
           onInvite={() => setInviteOpen(true)}
         />
-        <BalanceOverview expenses={group.expenses} transactions={transactions} />
-        <TabsList className="w-full sm:w-fit">
-          <TabsTrigger value="settle">Settle up</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="people">People</TabsTrigger>
-        </TabsList>
+        {showStats && (
+          <BalanceOverview
+            expenses={group.expenses}
+            transactions={transactions}
+            balances={balances}
+            currentPersonId={currentPersonId}
+          />
+        )}
+        {/* Toggle shares the tabs row rather than taking one of its own —
+            vertical space above the fold is tight on mobile. */}
+        <div className="flex items-center gap-2">
+          <TabsList className="min-w-0 flex-1 sm:flex-none">
+            <TabsTrigger value="settle">Settle up</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="people">People</TabsTrigger>
+          </TabsList>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0 gap-1.5 text-muted-foreground"
+            onClick={() => setShowStats((v) => !v)}
+            aria-expanded={showStats}
+            aria-label={showStats ? "Hide stats" : "Show stats"}
+          >
+            {showStats ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            <span className="hidden sm:inline">{showStats ? "Hide stats" : "Show stats"}</span>
+          </Button>
+        </div>
       </div>
 
       {/* Each panel below is its own fixed-header + scrolling-list column —
@@ -113,7 +145,12 @@ export function GroupDetail({
           </h2>
         </div>
         <div className={`min-h-0 flex-1 overflow-y-auto pb-6 ${PANEL_PAD}`}>
-          <SettleUpStrip people={group.people} transactions={transactions} onSettle={handleSettle} />
+          <SettleUpStrip
+            people={group.people}
+            transactions={transactions}
+            currentPersonId={currentPersonId}
+            onSettle={handleSettle}
+          />
         </div>
       </TabsContent>
 
