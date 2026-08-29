@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt, HandCoins, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, Receipt, HandCoins, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Expense, Person, Settlement } from "@/types";
 import { formatCurrency } from "@/lib/money";
 import { formatDate } from "@/lib/id";
+import { categoryMeta } from "@/lib/categories";
 import { AvatarBadge } from "./AvatarBadge";
 import { EmptyState } from "./EmptyState";
+import { ExpenseDetail } from "./ExpenseDetail";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +41,9 @@ export function ActivityFeed({
   onEditExpense,
   onDeleteExpense,
   onDeleteSettlement,
+  openExpenseId,
+  onToggleExpense,
+  expandInline,
 }: {
   people: Person[];
   expenses: Expense[];
@@ -45,6 +51,13 @@ export function ActivityFeed({
   onEditExpense: (expense: Expense) => void;
   onDeleteExpense: (expense: Expense) => void;
   onDeleteSettlement: (settlement: Settlement) => void;
+  // Which expense is open. Owned by GroupDetail because on mobile opening one
+  // replaces the whole group view, not just this list.
+  openExpenseId: string | null;
+  onToggleExpense: (expenseId: string) => void;
+  // Desktop expands in place; on mobile GroupDetail swaps in a full-screen
+  // view instead, so this list never renders the detail itself.
+  expandInline: boolean;
 }) {
   const [pendingDelete, setPendingDelete] = useState<FeedItem | null>(null);
 
@@ -75,45 +88,85 @@ export function ActivityFeed({
       <ul className="flex flex-col gap-2">
         {items.map((item) =>
           item.kind === "expense" ? (
-            <li
-              key={`e-${item.data.id}`}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <Receipt className="size-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">
-                  {item.data.description || "Untitled expense"}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {nameFor(people, item.data.paidBy)} paid {formatCurrency(item.data.totalCents)} ·{" "}
-                  {item.data.splitMethod === "equal" ? "Equal split" : "Exact split"} ·{" "}
-                  {item.data.participantIds.length} people · {formatDate(item.data.createdAt)}
-                </p>
-              </div>
-              <AvatarBadge
-                id={item.data.paidBy}
-                name={nameFor(people, item.data.paidBy)}
-                size="sm"
-                className="hidden sm:flex"
-              />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label="Expense actions">
-                    <MoreHorizontal className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => onEditExpense(item.data)}>
-                    <Pencil className="size-4" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive" onSelect={() => setPendingDelete(item)}>
-                    <Trash2 className="size-4" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
+            (() => {
+              const expense = item.data as Expense;
+              const { icon: CategoryIcon, label: categoryLabel } = categoryMeta(expense.category);
+              const expanded = expandInline && openExpenseId === expense.id;
+              return (
+                <li
+                  key={`e-${expense.id}`}
+                  className="rounded-xl border border-border bg-card px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                      title={categoryLabel}
+                    >
+                      <CategoryIcon className="size-4" />
+                    </span>
+                    {/* Spans rather than <p>: a <button> may only contain
+                        phrasing content, and this is the primary tap target
+                        for opening the expense. */}
+                    <button
+                      type="button"
+                      onClick={() => onToggleExpense(expense.id)}
+                      aria-expanded={expanded}
+                      className="min-w-0 flex-1 cursor-pointer text-left"
+                    >
+                      <span className="block truncate text-sm font-semibold">
+                        {expense.description || "Untitled expense"}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {nameFor(people, expense.paidBy)} paid {formatCurrency(expense.totalCents)}{" "}
+                        · {expense.splitMethod === "equal" ? "Equal split" : "Exact split"} ·{" "}
+                        {expense.participantIds.length} people · {formatDate(expense.createdAt)}
+                      </span>
+                    </button>
+                    <AvatarBadge
+                      id={expense.paidBy}
+                      name={nameFor(people, expense.paidBy)}
+                      size="sm"
+                      className="hidden sm:flex"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={expanded ? "Hide details" : "Show details"}
+                      aria-expanded={expanded}
+                      onClick={() => onToggleExpense(expense.id)}
+                    >
+                      <ChevronDown
+                        className={cn("size-4 transition-transform", expanded && "rotate-180")}
+                      />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" aria-label="Expense actions">
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => onEditExpense(expense)}>
+                          <Pencil className="size-4" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onSelect={() => setPendingDelete(item)}
+                        >
+                          <Trash2 className="size-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  {expanded && (
+                    <div className="mt-3 border-t border-border pt-3">
+                      <ExpenseDetail expense={expense} people={people} />
+                    </div>
+                  )}
+                </li>
+              );
+            })()
           ) : (
             <li
               key={`s-${item.data.id}`}

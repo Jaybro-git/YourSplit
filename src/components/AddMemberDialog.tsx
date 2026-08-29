@@ -36,7 +36,7 @@ export function AddMemberDialog({
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Priya"
+            placeholder="e.g. David"
           />
         </div>
         <Button type="submit" disabled={!name.trim()}>

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { DEFAULT_CATEGORY } from "@/lib/categories";
 import { toGroup, type GroupRow } from "@/lib/supabase/mappers";
 import { useAuth } from "@/store/auth";
 import type { Expense, Group, Settlement } from "@/types";
@@ -178,6 +179,8 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
           split_method: e.splitMethod,
           splits: e.splits,
           created_at: new Date(e.createdAt).toISOString(),
+          category: e.category ?? DEFAULT_CATEGORY,
+          note: e.note ?? null,
         }))
       );
       if (error) toast.error("Group restored, but expenses may be incomplete", { description: error.message });
@@ -270,6 +273,8 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       split_method: expense.splitMethod,
       splits: expense.splits,
       created_at: new Date(expense.createdAt).toISOString(),
+      category: expense.category ?? DEFAULT_CATEGORY,
+      note: expense.note ?? null,
     });
     if (error) rollback(snapshot, "Couldn't save expense", error);
   }

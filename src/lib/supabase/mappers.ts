@@ -1,4 +1,5 @@
 import type { Expense, ExpenseSplit, Group, Person, Settlement, SplitMethod } from "@/types";
+import { DEFAULT_CATEGORY, isExpenseCategory, type ExpenseCategory } from "@/lib/categories";
 
 // Row shapes as returned by GROUP_SELECT in src/store/groups.tsx
 // (`*, group_members(*, profiles(avatar_url, email)), expenses(*), settlements(*)`).
@@ -20,6 +21,8 @@ type ExpenseRow = {
   split_method: string;
   splits: unknown;
   created_at: string;
+  category: string | null;
+  note: string | null;
 };
 type SettlementRow = {
   id: string;
@@ -58,6 +61,8 @@ function toExpense(row: ExpenseRow): Expense {
     splitMethod: row.split_method as SplitMethod,
     splits: row.splits as ExpenseSplit[],
     createdAt: new Date(row.created_at).getTime(),
+    category: isExpenseCategory(row.category ?? "") ? (row.category as ExpenseCategory) : DEFAULT_CATEGORY,
+    note: row.note,
   };
 }
 

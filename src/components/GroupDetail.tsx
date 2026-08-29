@@ -7,7 +7,9 @@ import type { Expense, Group, Settlement, Transaction } from "@/types";
 import { computeBalances } from "@/lib/balances";
 import { simplifyDebts } from "@/lib/settleUp";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useAuth } from "@/store/auth";
+import { ExpenseScreen } from "./ExpenseScreen";
 import { GroupHeader } from "./GroupHeader";
 import { BalanceOverview } from "./BalanceOverview";
 import { SettleUpStrip } from "./SettleUpStrip";
@@ -62,6 +64,11 @@ export function GroupDetail({
   const [expenseDialog, setExpenseDialog] = useState<"closed" | "new" | Expense>("closed");
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  // Desktop expands the row inside the activity list; mobile replaces this
+  // whole view with a full-screen one, so the state has to live here rather
+  // than inside ActivityFeed.
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [openExpenseId, setOpenExpenseId] = useState<string | null>(null);
 
   const balances = useMemo(
     () => computeBalances(group.people, group.expenses, group.settlements),
@@ -85,11 +92,38 @@ export function GroupDetail({
     });
   }
 
+  const openExpense = openExpenseId
+    ? (group.expenses.find((e) => e.id === openExpenseId) ?? null)
+    : null;
+
   function handleDeleteSettlement(settlement: Settlement) {
     onDeleteSettlement(settlement.id);
     toast("Payment record deleted", {
       action: { label: "Undo", onClick: () => onRestoreSettlement(settlement) },
     });
+  }
+
+  // Mobile: an open expense takes over the entire group view — header, stats
+  // and tabs all give way, leaving only the AppShell navbar above it.
+  if (!isDesktop && openExpense) {
+    return (
+      <ExpenseScreen
+        expense={openExpense}
+        people={group.people}
+        onBack={() => setOpenExpenseId(null)}
+        // Return to the group view first: ExpenseFormDialog is rendered by
+        // the main branch below, so it has nowhere to mount while this
+        // full-screen view is up.
+        onEdit={() => {
+          setOpenExpenseId(null);
+          setExpenseDialog(openExpense);
+        }}
+        onDelete={() => {
+          setOpenExpenseId(null);
+          handleDeleteExpense(openExpense);
+        }}
+      />
+    );
   }
 
   return (
@@ -183,6 +217,11 @@ export function GroupDetail({
             onEditExpense={(expense) => setExpenseDialog(expense)}
             onDeleteExpense={handleDeleteExpense}
             onDeleteSettlement={handleDeleteSettlement}
+            openExpenseId={openExpenseId}
+            onToggleExpense={(id) =>
+              setOpenExpenseId((current) => (current === id ? null : id))
+            }
+            expandInline={isDesktop}
           />
         </div>
       </TabsContent>

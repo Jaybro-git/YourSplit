@@ -1,3 +1,5 @@
+import type { ExpenseCategory } from "@/lib/categories";
+
 export type Person = {
   id: string;
   name: string;
@@ -25,6 +27,11 @@ export type Expense = {
   splitMethod: SplitMethod;
   splits: ExpenseSplit[];
   createdAt: number;
+  // Optional so expenses saved before these fields existed still satisfy the
+  // type; readers go through categoryMeta() in src/lib/categories.ts, which
+  // falls back to "other".
+  category?: ExpenseCategory;
+  note?: string | null;
 };
 
 export type Transaction = {

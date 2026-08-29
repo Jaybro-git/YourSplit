@@ -4,6 +4,13 @@ import { useState, type FormEvent } from "react";
 import { Reorder, useDragControls } from "motion/react";
 import { GripVertical } from "lucide-react";
 import type { Expense, Person, SplitMethod } from "@/types";
+import {
+  DEFAULT_CATEGORY,
+  EXPENSE_CATEGORIES,
+  NOTE_MAX_LENGTH,
+  categoryMeta,
+  type ExpenseCategory,
+} from "@/lib/categories";
 import { formatCurrency, splitEqually, sumSplits, toCents } from "@/lib/money";
 import { generateId, timestampNow, toDateInputValue, combineDateAndTime } from "@/lib/id";
 import { AvatarBadge } from "./AvatarBadge";
@@ -88,6 +95,10 @@ export function ExpenseForm({
   onCancel: () => void;
 }) {
   const [description, setDescription] = useState(editingExpense?.description ?? "");
+  const [category, setCategory] = useState<ExpenseCategory>(
+    editingExpense?.category ?? DEFAULT_CATEGORY
+  );
+  const [note, setNote] = useState(editingExpense?.note ?? "");
   const [amountRs, setAmountRs] = useState(
     editingExpense ? (editingExpense.totalCents / 100).toString() : ""
   );
@@ -153,6 +164,8 @@ export function ExpenseForm({
       splitMethod,
       splits,
       createdAt: combineDateAndTime(dateStr, referenceTime),
+      category,
+      note: note.trim() || null,
     };
 
     onSave(expense);
@@ -175,6 +188,44 @@ export function ExpenseForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="e.g. Dinner, Uber, Groceries"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="expense-category">Category</Label>
+        <Select value={category} onValueChange={(v) => setCategory(v as ExpenseCategory)}>
+          <SelectTrigger id="expense-category" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {EXPENSE_CATEGORIES.map((value) => {
+              const { label, icon: Icon } = categoryMeta(value);
+              return (
+                <SelectItem key={value} value={value}>
+                  <span className="flex items-center gap-2">
+                    <Icon className="size-4 text-muted-foreground" />
+                    {label}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <Label htmlFor="expense-note">Note (optional)</Label>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {note.length}/{NOTE_MAX_LENGTH}
+          </span>
+        </div>
+        <Input
+          id="expense-note"
+          value={note}
+          maxLength={NOTE_MAX_LENGTH}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="e.g. Table for 6, tip included"
         />
       </div>
 

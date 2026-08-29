@@ -72,6 +72,8 @@ export type Database = {
           split_method: "equal" | "exact";
           splits: { personId: string; amountCents: number }[];
           created_at: string;
+          category: string;
+          note: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["expenses"]["Row"]> & {
           id: string;
